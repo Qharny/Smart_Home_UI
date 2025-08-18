@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../route/app_route.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,60 +26,51 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFE0E0E0), // Light gray background
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Smart ',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.home,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              height: 4,
-              width: 100,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Home',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+            // logo
+            Image.asset(
+              'asset/images/Frame 3 1.png',
+              height: 120,
+              width: 120,
+              fit: BoxFit.contain,
             ),
           ],
         ),
       ),
     );
   }
+}
+
+// Custom painter for the house icon
+class HousePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+
+    // Draw the house base (rectangle)
+    final baseRect = Rect.fromLTWH(
+      0,
+      size.height * 0.4,
+      size.width,
+      size.height * 0.6,
+    );
+    canvas.drawRect(baseRect, paint);
+
+    // Draw the roof (triangle)
+    final path = Path();
+    path.moveTo(size.width * 0.5, 0); // Top point
+    path.lineTo(0, size.height * 0.4); // Bottom left
+    path.lineTo(size.width, size.height * 0.4); // Bottom right
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

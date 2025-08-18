@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:smart_home/route/app_route.dart';
-import 'screens/welcome_screen.dart';
 
 
 void main() {
