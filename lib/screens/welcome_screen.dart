@@ -83,22 +83,45 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
 
                     // Background image
                     Container(
-                      width: double.infinity,
-                      height: 200,
+                      width: MediaQuery.of(context).size.width * 1.0,
+                      height: MediaQuery.of(context).size.height * 0.3,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        image: const DecorationImage(
+                        image: DecorationImage(
                           image: AssetImage('asset/images/home.png'),
                           fit: BoxFit.cover,
                         ),
                       ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              const Color(
+                                0xFFF1F2F6,
+                              ).withOpacity(1.0), // Fade to background at top
+                              const Color(
+                                0xFFF1F2F6,
+                              ).withOpacity(0.0), // Transparent in middle
+                              const Color(0xFFF1F2F6).withOpacity(
+                                1.0,
+                              ), // Fade to background at bottom
+                            ],
+                            stops: const [
+                              0.0,
+                              0.3,
+                              1.0,
+                            ], // Control fade positions
+                          ),
+                        ),
+                      ),
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 10),
 
                     // Form fields
                     const Text(
