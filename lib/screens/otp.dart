@@ -1,14 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
+
+import '../route/app_route.dart';
 
 class VerificationScreen extends StatefulWidget {
   final String phoneNumber;
 
-  const VerificationScreen({
-    super.key,
-    required this.phoneNumber,
-  });
+  const VerificationScreen({super.key, required this.phoneNumber});
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -17,15 +17,12 @@ class VerificationScreen extends StatefulWidget {
 class _VerificationScreenState extends State<VerificationScreen> {
   final List<TextEditingController> _controllers = List.generate(
     4,
-        (index) => TextEditingController(),
+    (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(
-    4,
-        (index) => FocusNode(),
-  );
+  final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
 
   Timer? _timer;
-  int _countdown = 239; // 3:59 in seconds
+  int _countdown = 120; // 2 minutes in seconds
 
   @override
   void initState() {
@@ -86,10 +83,19 @@ class _VerificationScreenState extends State<VerificationScreen> {
       // Handle verification logic here
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Verification code: $code'),
+          content: Text('Verification successful!'),
           backgroundColor: Colors.green,
         ),
       );
+
+      // Navigate to home screen after successful verification
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRouter.home,
+          (route) => false,
+        );
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -115,7 +121,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Verification code resent'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.black,
       ),
     );
   }
@@ -135,19 +141,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
                   child: const Icon(
-                    Icons.arrow_back_ios,
+                    Icons.arrow_back,
                     size: 20,
                     color: Colors.black,
                   ),
@@ -175,7 +170,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     height: 1.4,
                   ),
                   children: [
-                    const TextSpan(text: 'We have sent the code verification to\nyour number: '),
+                    const TextSpan(
+                      text:
+                          'We have sent the code verification to\nyour number: ',
+                    ),
                     TextSpan(
                       text: widget.phoneNumber,
                       style: const TextStyle(
@@ -204,13 +202,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             : Colors.transparent,
                         width: 2,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      // boxShadow: [
+                      //   BoxShadow(
+                      //     color: Colors.black.withOpacity(0.1),
+                      //     blurRadius: 4,
+                      //     offset: const Offset(0, 2),
+                      //   ),
+                      // ],
                     ),
                     child: TextFormField(
                       controller: _controllers[index],
@@ -231,7 +229,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       ),
                       onChanged: (value) => _onDigitChanged(value, index),
                       onTap: () {
-                        _controllers[index].selection = TextSelection.fromPosition(
+                        _controllers[index]
+                            .selection = TextSelection.fromPosition(
                           TextPosition(offset: _controllers[index].text.length),
                         );
                       },
@@ -285,10 +284,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   children: [
                     Text(
                       "Didn't receive the code? ",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                     GestureDetector(
                       onTap: _countdown == 0 ? _resendCode : null,
