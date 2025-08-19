@@ -47,15 +47,25 @@ class CacheService {
   }
 
   Future<void> updateDevicePowerState(String deviceId, bool isOn) async {
+    print('CacheService: Updating device $deviceId power state to: $isOn');
     final currentState = await getDeviceState(deviceId) ?? {};
     currentState['isOn'] = isOn;
     currentState['lastUpdated'] = DateTime.now().toIso8601String();
     await saveDeviceState(deviceId, currentState);
+    print('CacheService: Device $deviceId power state saved to cache');
   }
 
   Future<bool?> getDevicePowerState(String deviceId) async {
     final state = await getDeviceState(deviceId);
-    return state?['isOn'] as bool?;
+    final isOn = state?['isOn'] as bool?;
+    print('CacheService: Retrieved device $deviceId power state: $isOn');
+    return isOn;
+  }
+
+  // Clear all device states (for testing)
+  Future<void> clearDeviceStates() async {
+    print('CacheService: Clearing all device states');
+    await _prefs.remove(_deviceStatesKey);
   }
 
   // User Preferences

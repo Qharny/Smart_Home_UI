@@ -28,6 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh device states when dependencies change (e.g., returning from device control)
+    _refreshDeviceStates();
+  }
+
   Future<void> _loadData() async {
     try {
       // Force reinitialize devices to ensure correct names
@@ -53,13 +60,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleDevice(String deviceId) async {
     try {
+      print('HomeScreen: Toggling device: $deviceId'); // Debug log
       await _deviceRepository.toggleDevice(deviceId);
+      print('HomeScreen: Device toggled successfully'); // Debug log
       await _loadData(); // Reload data to reflect changes
+      print('HomeScreen: Data reloaded'); // Debug log
     } catch (e) {
+      print('HomeScreen: Error toggling device: $e'); // Debug log
       // Handle error
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to toggle device: $e')));
+    }
+  }
+
+  Future<void> _refreshDeviceStates() async {
+    print('HomeScreen: Refreshing device states');
+    // Refresh device states from cache
+    for (final device in _devices) {
+      final cachedState = await _cacheService.getDevicePowerState(device.id);
+      if (cachedState != null && cachedState != device.isOn) {
+        print(
+          'HomeScreen: Updating device ${device.name} state from ${device.isOn} to $cachedState',
+        );
+        // Update device state
+        device.isOn = cachedState;
+      }
+    }
+    setState(() {
+      // Trigger rebuild to reflect updated states
+    });
+    print('HomeScreen: Device states refreshed');
+  }
+
+  // Test method to verify synchronization
+  Future<void> _testSynchronization() async {
+    print('HomeScreen: Testing synchronization...');
+    for (final device in _devices) {
+      final cachedState = await _cacheService.getDevicePowerState(device.id);
+      print(
+        'HomeScreen: Device ${device.name} - Current: ${device.isOn}, Cached: $cachedState',
+      );
     }
   }
 
@@ -186,17 +227,27 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // TODO: Navigate to all devices
-                          },
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
+                        Row(
+                          children: [
+                            // Temporary test button
+                            IconButton(
+                              onPressed: _testSynchronization,
+                              icon: const Icon(Icons.bug_report, size: 20),
+                              tooltip: 'Test Synchronization',
                             ),
-                          ),
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Navigate to all devices
+                              },
+                              child: const Text(
+                                'View All',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -218,16 +269,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         final device = _devices[index];
                         return DeviceCard(
+                          deviceId: device.id,
                           name: device.name,
                           imagePath: device.imagePath,
                           isOn: device.isOn,
                           onToggle: (value) async {
+                            print(
+                              'onToggle called with value: $value for device: ${device.name}',
+                            ); // Debug log
                             try {
-                              await _deviceRepository.updateDeviceState(
-                                device.id,
-                                value,
-                              );
-                              await _loadData(); // Reload data to reflect changes
+                              await _toggleDevice(device.id);
                             } catch (e) {
                               // Handle error
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -245,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'device': device,
                                 'onDeviceStateChanged': () {
                                   // Refresh device list when device state changes
-                                  _loadData();
+                                  _refreshDeviceStates();
                                 },
                               },
                             );

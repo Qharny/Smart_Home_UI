@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-class DeviceCard extends StatelessWidget {
+import '../services/cache_service.dart';
+
+class DeviceCard extends StatefulWidget {
+  final String deviceId;
   final String name;
   final String imagePath;
   final bool isOn;
@@ -9,6 +12,7 @@ class DeviceCard extends StatelessWidget {
 
   const DeviceCard({
     super.key,
+    required this.deviceId,
     required this.name,
     required this.imagePath,
     required this.isOn,
@@ -17,9 +21,69 @@ class DeviceCard extends StatelessWidget {
   });
 
   @override
+  State<DeviceCard> createState() => _DeviceCardState();
+}
+
+class _DeviceCardState extends State<DeviceCard> {
+  bool _localIsOn = false;
+  final CacheService _cacheService = CacheService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeviceState();
+  }
+
+  Future<void> _loadDeviceState() async {
+    // Load device state from cache service using device ID
+    final cachedState = await _cacheService.getDevicePowerState(
+      widget.deviceId,
+    );
+    print(
+      'DeviceCard: Loading state for ${widget.name} (${widget.deviceId}), cached: $cachedState, widget.isOn: ${widget.isOn}',
+    );
+    setState(() {
+      _localIsOn = cachedState ?? widget.isOn;
+    });
+    print('DeviceCard: Final local state for ${widget.name}: $_localIsOn');
+  }
+
+  @override
+  void didUpdateWidget(DeviceCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isOn != widget.isOn) {
+      print(
+        'DeviceCard: Widget state changed for ${widget.name}, old: ${oldWidget.isOn}, new: ${widget.isOn}',
+      );
+      setState(() {
+        _localIsOn = widget.isOn;
+      });
+      print('DeviceCard: Updated local state for ${widget.name}: $_localIsOn');
+    }
+  }
+
+  Future<void> _handleToggle() async {
+    print(
+      'DeviceCard: Toggle tapped for ${widget.name}, current state: $_localIsOn',
+    ); // Debug log
+    print('DeviceCard: Calling onToggle with: ${!_localIsOn}'); // Debug log
+
+    // Update local state immediately for visual feedback
+    setState(() {
+      _localIsOn = !_localIsOn;
+    });
+
+    // Call the parent callback
+    await widget.onToggle(_localIsOn);
+    print(
+      'DeviceCard: Toggle completed for ${widget.name}, new state: $_localIsOn',
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      height: 160,
+      height: 180,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -47,11 +111,7 @@ class DeviceCard extends StatelessWidget {
                 ),
               ),
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: Image.asset(imagePath, fit: BoxFit.cover),
+                child: Image.asset(widget.imagePath, fit: BoxFit.cover),
               ),
             ),
           ),
@@ -63,7 +123,7 @@ class DeviceCard extends StatelessWidget {
               children: [
                 // Title at the top left
                 Text(
-                  name,
+                  widget.name,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -72,20 +132,44 @@ class DeviceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Toggle switch
+                // Custom toggle button
                 GestureDetector(
-                  onTap: () => onToggle(!isOn),
+                  onTap: _handleToggle,
                   child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: Transform.rotate(
-                      angle: -1.5708,
-                      child: Switch(
-                        value: isOn,
-                        onChanged: onToggle,
-                        activeColor: Colors.black,
-                        inactiveThumbColor: Colors.white,
-                        inactiveTrackColor: Colors.grey[300],
+                    width: 30,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: _localIsOn ? Colors.black : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.blue.withOpacity(0.3),
+                        width: 1,
                       ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Toggle circle
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 200),
+                          left: 2,
+                          top: _localIsOn ? 2 : 22,
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -95,9 +179,9 @@ class DeviceCard extends StatelessWidget {
                 // View controls button at the bottom
                 SizedBox(
                   height: 30,
-                  width: double.infinity,
+                  width: 100,
                   child: ElevatedButton(
-                    onPressed: onViewControls,
+                    onPressed: widget.onViewControls,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       foregroundColor: Colors.black,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
+import '../services/cache_service.dart';
 
 class DeviceControlScreen extends StatefulWidget {
   final Device device;
@@ -23,12 +24,37 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
   String selectedRoom = 'Livingroom';
   bool hasAutomation = true;
   final DeviceRepository _deviceRepository = DeviceRepository();
+  final CacheService _cacheService = CacheService();
 
   @override
   void initState() {
     super.initState();
-    isDeviceOn = widget.device.isOn;
+    _loadDeviceState();
     brightness = 0.47; // Default brightness
+  }
+
+  Future<void> _loadDeviceState() async {
+    // Load device state from cache service
+    final cachedState = await _cacheService.getDevicePowerState(widget.device.id);
+    print('DeviceControlScreen: Loading state for ${widget.device.name}, cached: $cachedState, widget: ${widget.device.isOn}');
+    setState(() {
+      isDeviceOn = cachedState ?? widget.device.isOn;
+    });
+    print('DeviceControlScreen: Final state for ${widget.device.name}: $isDeviceOn');
+  }
+
+  Future<void> _updateDeviceState(bool newState) async {
+    print('DeviceControlScreen: Updating state for ${widget.device.name} to: $newState');
+    setState(() {
+      isDeviceOn = newState;
+    });
+    
+    // Update device state in repository and cache
+    await _deviceRepository.updateDeviceState(widget.device.id, newState);
+    
+    // Notify parent widget about state change
+    widget.onDeviceStateChanged?.call();
+    print('DeviceControlScreen: State updated and parent notified for ${widget.device.name}');
   }
 
   @override
@@ -85,16 +111,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                       Switch(
                         value: isDeviceOn,
                         onChanged: (value) async {
-                          setState(() {
-                            isDeviceOn = value;
-                          });
-                          // Update device state in repository
-                          await _deviceRepository.updateDeviceState(
-                            widget.device.id,
-                            value,
-                          );
-                          // Notify parent widget about state change
-                          widget.onDeviceStateChanged?.call();
+                          await _updateDeviceState(value);
                         },
                         activeColor: Colors.black,
                         inactiveThumbColor: Colors.white,
@@ -147,8 +164,6 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                 ],
               ),
               const SizedBox(height: 40),
-
-              // Device-specific controls
               Expanded(child: _buildDeviceControls()),
 
               // Automation Section
@@ -366,7 +381,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -414,7 +429,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                   fit: BoxFit.contain,
                   color: isDeviceOn
                       ? Colors.orange.withOpacity(0.8)
-                      : Colors.grey[400],
+                      : null,
                 ),
               ),
               const SizedBox(height: 20),

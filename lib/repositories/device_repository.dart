@@ -13,7 +13,18 @@ class DeviceRepository {
     final devicesJson = _cacheService.getData<String>(_devicesKey);
     if (devicesJson != null) {
       final List<dynamic> devicesList = jsonDecode(devicesJson);
-      return devicesList.map((json) => Device.fromMap(json)).toList();
+      final devices = devicesList.map((json) => Device.fromMap(json)).toList();
+
+      // Update device states from cache service
+      for (final device in devices) {
+        final cachedState = await _cacheService.getDevicePowerState(device.id);
+        if (cachedState != null && cachedState != device.isOn) {
+          // Update device state from cache
+          device.isOn = cachedState;
+        }
+      }
+
+      return devices;
     }
 
     // Return default devices if none are cached
@@ -40,6 +51,7 @@ class DeviceRepository {
 
   // Update device state
   Future<void> updateDeviceState(String deviceId, bool isOn) async {
+    print('DeviceRepository: Updating device $deviceId state to: $isOn');
     final devices = await getAllDevices();
     final deviceIndex = devices.indexWhere((device) => device.id == deviceId);
 
@@ -48,18 +60,43 @@ class DeviceRepository {
         isOn: isOn,
         lastUpdated: DateTime.now(),
       );
+
+      // Save to both device list and individual device state cache
       await saveAllDevices(devices);
+      await _cacheService.updateDevicePowerState(deviceId, isOn);
+      print(
+        'DeviceRepository: Device $deviceId state updated and saved to cache',
+      );
+    } else {
+      print('DeviceRepository: Device $deviceId not found');
     }
   }
 
   // Toggle device state
   Future<void> toggleDevice(String deviceId) async {
+    print('DeviceRepository: Toggling device: $deviceId'); // Debug log
     final devices = await getAllDevices();
     final deviceIndex = devices.indexWhere((device) => device.id == deviceId);
 
     if (deviceIndex != -1) {
-      devices[deviceIndex] = devices[deviceIndex].toggle();
+      print(
+        'DeviceRepository: Device before toggle: ${devices[deviceIndex].isOn}',
+      ); // Debug log
+      final newState = !devices[deviceIndex].isOn;
+      devices[deviceIndex] = devices[deviceIndex].copyWith(
+        isOn: newState,
+        lastUpdated: DateTime.now(),
+      );
+      print(
+        'DeviceRepository: Device after toggle: ${devices[deviceIndex].isOn}',
+      ); // Debug log
+
+      // Save to both device list and individual device state cache
       await saveAllDevices(devices);
+      await _cacheService.updateDevicePowerState(deviceId, newState);
+      print('DeviceRepository: Devices saved to cache'); // Debug log
+    } else {
+      print('DeviceRepository: Device not found: $deviceId'); // Debug log
     }
   }
 
