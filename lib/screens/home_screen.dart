@@ -4,7 +4,6 @@ import '../models/device.dart';
 import '../repositories/device_repository.dart';
 import '../route/app_route.dart';
 import '../services/cache_service.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../widgets/device_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,7 +14,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
   final DeviceRepository _deviceRepository = DeviceRepository();
   final CacheService _cacheService = CacheService();
   List<Device> _devices = [];
@@ -229,15 +227,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Row(
                           children: [
-                            // Temporary test button
+                            // Add Device Button
                             IconButton(
-                              onPressed: _testSynchronization,
-                              icon: const Icon(Icons.bug_report, size: 20),
-                              tooltip: 'Test Synchronization',
+                              onPressed: () {
+                                Navigator.pushNamed(context, AppRouter.addDevice);
+                              },
+                              icon: const Icon(Icons.add, size: 20),
+                              tooltip: 'Add Device',
                             ),
                             TextButton(
                               onPressed: () {
-                                // TODO: Navigate to all devices
+                                Navigator.pushNamed(context, AppRouter.devices);
                               },
                               child: const Text(
                                 'View All',
@@ -312,14 +312,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
       ),
     );
   }

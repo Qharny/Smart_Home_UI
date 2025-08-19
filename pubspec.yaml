@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.2.2
+  qr_code_scanner: ^1.0.1
+  flutter_svg: ^2.0.13
 
 dev_dependencies:
   flutter_test:
