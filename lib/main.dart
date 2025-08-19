@@ -4,10 +4,10 @@ import 'package:smart_home/services/cache_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize cache service
   await CacheService().init();
-  
+
   runApp(const SmartHomeApp());
 }
 
