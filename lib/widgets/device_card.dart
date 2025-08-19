@@ -82,6 +82,7 @@ class DeviceCard extends StatelessWidget {
           // View controls button at the bottom
           SizedBox(
             width: double.infinity,
+            // height: 40,
             child: ElevatedButton(
               onPressed: onViewControls,
               style: ElevatedButton.styleFrom(

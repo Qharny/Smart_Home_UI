@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../route/app_route.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/device_card.dart';
 
@@ -166,7 +167,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             });
                           },
                           onViewControls: () {
-                            // TODO: Navigate to light controls
+                            Navigator.pushNamed(
+                              context,
+                              AppRouter.lightControl,
+                            );
                           },
                         ),
                         DeviceCard(
@@ -192,7 +196,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             });
                           },
                           onViewControls: () {
-                            // TODO: Navigate to light controls
+                            Navigator.pushNamed(
+                              context,
+                              AppRouter.lightControl,
+                            );
                           },
                         ),
                         DeviceCard(
