@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../route/app_route.dart';
+import '../services/cache_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,16 +11,27 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final CacheService _cacheService = CacheService();
+
   @override
   void initState() {
     super.initState();
-    _navigateToWelcome();
+    _checkLoginStatus();
   }
 
-  _navigateToWelcome() async {
+  _checkLoginStatus() async {
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
-      Navigator.pushReplacementNamed(context, AppRouter.welcome);
+      // Check if user is already logged in
+      final isLoggedIn = _cacheService.isLoggedIn();
+      
+      if (isLoggedIn) {
+        // User is logged in, navigate to home
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+      } else {
+        // User is not logged in, navigate to welcome screen
+        Navigator.pushReplacementNamed(context, AppRouter.welcome);
+      }
     }
   }
 

@@ -19,7 +19,7 @@ class DeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 160,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -31,74 +31,93 @@ class DeviceCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          // Title at the top
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+          // Image positioned to touch the right edge
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 30,
+            child: Container(
+              width: 80,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: Image.asset(imagePath, fit: BoxFit.cover),
+              ),
             ),
           ),
-          const SizedBox(height: 10),
 
-          // Toggle and Icon side by side
-          Expanded(
-            child: Row(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Vertical Toggle Switch on the left
-                Transform.rotate(
-                  angle: -1.5708, // -90 degrees in radians
-                  child: Switch(
-                    value: isOn,
-                    onChanged: onToggle,
-                    activeColor: name == 'Fan' ? Colors.black : Colors.transparent,
-                    inactiveThumbColor: Colors.black,
-                    inactiveTrackColor: Colors.grey[200],
+                // Title at the top left
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(height: 16),
 
-                // Image on the right
-                Expanded(
-                  child: Center(
-                    child: Image.asset(
-                      imagePath,
-                      width: 50,
-                      height: 60,
-                      fit: BoxFit.contain,
+                // Toggle switch
+                GestureDetector(
+                  onTap: () => onToggle(!isOn),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    child: Transform.rotate(
+                      angle: -1.5708,
+                      child: Switch(
+                        value: isOn,
+                        onChanged: onToggle,
+                        activeColor: Colors.black,
+                        inactiveThumbColor: Colors.white,
+                        inactiveTrackColor: Colors.grey[300],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // View controls button at the bottom
+                SizedBox(
+                  height: 30,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onViewControls,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.black, width: 1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                    ),
+                    child: const Text(
+                      'View controls',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // View controls button at the bottom
-          SizedBox(
-            width: double.infinity,
-            // height: 40,
-            child: ElevatedButton(
-              onPressed: onViewControls,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[100],
-                foregroundColor: Colors.black,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  side: const BorderSide(color: Colors.black, width: 1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: const Text(
-                'View controls',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-              ),
             ),
           ),
         ],

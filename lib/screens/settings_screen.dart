@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../route/app_route.dart';
 import '../services/cache_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _nameController = TextEditingController();
   String _selectedTheme = 'system';
   bool _notificationsEnabled = true;
+  String? _userPhone;
 
   @override
   void initState() {
@@ -23,12 +25,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final userName = _cacheService.getUserName();
+    final userPhone = _cacheService.getUserPhone();
     final themeMode = _cacheService.getThemeMode();
     final notificationsEnabled =
         _cacheService.getData<bool>('notifications_enabled') ?? true;
 
     setState(() {
       _nameController.text = userName ?? '';
+      _userPhone = userPhone;
       _selectedTheme = themeMode;
       _notificationsEnabled = notificationsEnabled;
     });
@@ -93,6 +97,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _cacheService.logout();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Logged out successfully!')));
+
+      // Navigate to welcome screen
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRouter.welcome,
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,6 +182,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    if (_userPhone != null) ...[
+                      Text(
+                        'Phone: $_userPhone',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -273,6 +321,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _logout,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

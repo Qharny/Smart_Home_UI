@@ -108,33 +108,38 @@ class DeviceRepository {
     }
   }
 
+  // Force reinitialize devices (useful for updating device names)
+  Future<void> forceReinitializeDevices() async {
+    await saveAllDevices(_getDefaultDevices());
+  }
+
   // Default devices for the app
   List<Device> _getDefaultDevices() {
     return [
       Device(
         id: 'light_1',
-        name: 'bulb',
+        name: 'Light',
         imagePath: 'asset/images/bulb.png',
         type: 'light',
         isOn: false,
       ),
       Device(
         id: 'light_2',
-        name: 'bulb',
+        name: 'Light',
         imagePath: 'asset/images/bulb.png',
         type: 'light',
         isOn: false,
       ),
       Device(
         id: 'fan_1',
-        name: 'fan',
+        name: 'Fan',
         imagePath: 'asset/images/fan.png',
         type: 'fan',
         isOn: true,
       ),
       Device(
         id: 'fan_2',
-        name: 'fan',
+        name: 'Fan',
         imagePath: 'asset/images/fan.png',
         type: 'fan',
         isOn: true,

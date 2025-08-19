@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../screens/device_control_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/light_control_screen.dart';
 import '../screens/otp.dart';
@@ -13,6 +14,7 @@ class AppRouter {
   static const String verification = '/verification';
   static const String home = '/home';
   static const String lightControl = '/light-control';
+  static const String deviceControl = '/device-control';
   static const String settings = '/settings';
 
   static Route<dynamic> generateRoute(RouteSettings routeSettings) {
@@ -24,13 +26,23 @@ class AppRouter {
       case verification:
         final args = routeSettings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) =>
-              VerificationScreen(phoneNumber: args?['phoneNumber'] ?? ''),
+          builder: (_) => VerificationScreen(
+            phoneNumber: args?['phoneNumber'] ?? '',
+            userName: args?['userName'] ?? '',
+          ),
         );
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case lightControl:
         return MaterialPageRoute(builder: (_) => const LightControlScreen());
+      case deviceControl:
+        final args = routeSettings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => DeviceControlScreen(
+            device: args?['device'],
+            onDeviceStateChanged: args?['onDeviceStateChanged'],
+          ),
+        );
       case settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:

@@ -8,6 +8,8 @@ class CacheService {
   static const String _isFirstLaunchKey = 'is_first_launch';
   static const String _themeModeKey = 'theme_mode';
   static const String _lastSyncTimeKey = 'last_sync_time';
+  static const String _isLoggedInKey = 'is_logged_in';
+  static const String _userPhoneKey = 'user_phone';
 
   // Singleton pattern
   static final CacheService _instance = CacheService._internal();
@@ -63,6 +65,31 @@ class CacheService {
 
   String? getUserName() {
     return _prefs.getString(_userNameKey);
+  }
+
+  // Authentication Management
+  Future<void> saveLoginState(bool isLoggedIn, {String? userName, String? phoneNumber}) async {
+    await _prefs.setBool(_isLoggedInKey, isLoggedIn);
+    if (userName != null) {
+      await saveUserName(userName);
+    }
+    if (phoneNumber != null) {
+      await _prefs.setString(_userPhoneKey, phoneNumber);
+    }
+  }
+
+  bool isLoggedIn() {
+    return _prefs.getBool(_isLoggedInKey) ?? false;
+  }
+
+  String? getUserPhone() {
+    return _prefs.getString(_userPhoneKey);
+  }
+
+  Future<void> logout() async {
+    await _prefs.remove(_isLoggedInKey);
+    await _prefs.remove(_userPhoneKey);
+    // Keep user name for convenience, but clear login state
   }
 
   // App Settings

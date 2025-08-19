@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../route/app_route.dart';
+import '../services/cache_service.dart';
 
 class VerificationScreen extends StatefulWidget {
   final String phoneNumber;
+  final String userName;
 
-  const VerificationScreen({super.key, required this.phoneNumber});
+  const VerificationScreen({
+    super.key,
+    required this.phoneNumber,
+    required this.userName,
+  });
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -20,6 +26,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     (index) => TextEditingController(),
   );
   final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
+  final CacheService _cacheService = CacheService();
 
   Timer? _timer;
   int _countdown = 120; // 2 minutes in seconds
@@ -77,7 +84,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     String code = _controllers.map((c) => c.text).join();
     if (code.length == 4) {
       // Handle verification logic here
@@ -86,6 +93,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
           content: Text('Verification successful!'),
           backgroundColor: Colors.green,
         ),
+      );
+
+      // Save login state
+      await _cacheService.saveLoginState(
+        true,
+        userName: widget.userName,
+        phoneNumber: widget.phoneNumber,
       );
 
       // Navigate to home screen after successful verification

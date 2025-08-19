@@ -26,7 +26,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       Navigator.pushNamed(
         context,
         AppRouter.verification,
-        arguments: {'phoneNumber': _phoneController.text},
+        arguments: {
+          'phoneNumber': _phoneController.text,
+          'userName': _nameController.text.trim(),
+        },
       );
     }
   }

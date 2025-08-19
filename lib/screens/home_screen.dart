@@ -30,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Initialize default devices if needed
-      await _deviceRepository.initializeDefaultDevices();
+      // Force reinitialize devices to ensure correct names
+      await _deviceRepository.forceReinitializeDevices();
 
       // Load devices from cache
       final devices = await _deviceRepository.getAllDevices();
@@ -221,25 +221,34 @@ class _HomeScreenState extends State<HomeScreen> {
                           name: device.name,
                           imagePath: device.imagePath,
                           isOn: device.isOn,
-                          onToggle: (value) {
-                            _toggleDevice(device.id);
-                          },
-                          onViewControls: () {
-                            if (device.type == 'light') {
-                              Navigator.pushNamed(
-                                context,
-                                AppRouter.lightControl,
+                          onToggle: (value) async {
+                            try {
+                              await _deviceRepository.updateDeviceState(
+                                device.id,
+                                value,
                               );
-                            } else {
-                              // TODO: Navigate to other device controls
+                              await _loadData(); // Reload data to reflect changes
+                            } catch (e) {
+                              // Handle error
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                    '${device.name} controls coming soon!',
-                                  ),
+                                  content: Text('Failed to toggle device: $e'),
                                 ),
                               );
                             }
+                          },
+                          onViewControls: () async {
+                            await Navigator.pushNamed(
+                              context,
+                              AppRouter.deviceControl,
+                              arguments: {
+                                'device': device,
+                                'onDeviceStateChanged': () {
+                                  // Refresh device list when device state changes
+                                  _loadData();
+                                },
+                              },
+                            );
                           },
                         );
                       },
