@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,12 +23,22 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
 
   Timer? _timer;
-  int _countdown = 120; // 2 minutes in seconds
+  int _countdown = 120; // 2 minutes
+  String? _generatedCode;
+  bool _canSubmit = false; // Initially disable submit
 
   @override
   void initState() {
     super.initState();
+    _generateVerificationCode();
     _startCountdown();
+
+    // After 5 seconds: auto-fill OTP
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        _autoFillOtp();
+      }
+    });
   }
 
   @override
@@ -40,6 +51,34 @@ class _VerificationScreenState extends State<VerificationScreen> {
       node.dispose();
     }
     super.dispose();
+  }
+
+  void _generateVerificationCode() {
+    final random = Random();
+    _generatedCode = '${random.nextInt(10)}${random.nextInt(10)}${random.nextInt(10)}${random.nextInt(10)}';
+    debugPrint('🔐 Auto-filled OTP will be: $_generatedCode'); // For testing
+  }
+
+  void _autoFillOtp() {
+    if (_generatedCode == null) return;
+
+    // Fill each controller with one digit
+    for (int i = 0; i < 4; i++) {
+      _controllers[i].text = _generatedCode![i];
+    }
+
+    // Optional: unfocus all fields
+    for (var node in _focusNodes) {
+      node.unfocus();
+    }
+
+    // Enable submit button after auto-fill
+    setState(() {
+      _canSubmit = true;
+    });
+
+    // Optional: auto-submit after filling
+    // Future.delayed(const Duration(seconds: 1), _handleSubmit);
   }
 
   void _startCountdown() {
@@ -78,17 +117,20 @@ class _VerificationScreenState extends State<VerificationScreen> {
   }
 
   void _handleSubmit() {
-    String code = _controllers.map((c) => c.text).join();
-    if (code.length == 4) {
-      // Handle verification logic here
+    if (!_canSubmit) return;
+
+    String enteredCode = _controllers.map((c) => c.text).join();
+
+    if (enteredCode.length != 4) return;
+
+    if (enteredCode == _generatedCode) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Verification successful!'),
           backgroundColor: Colors.green,
         ),
       );
 
-      // Navigate to home screen after successful verification
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -99,7 +141,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter complete verification code'),
+          content: Text('Invalid code!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -108,15 +150,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   void _resendCode() {
     setState(() {
-      _countdown = 239;
+      _countdown = 120;
     });
     _startCountdown();
 
-    // Clear all fields
+    // Generate new code
+    _generateVerificationCode();
+
+    // Clear fields
     for (var controller in _controllers) {
       controller.clear();
     }
-    _focusNodes[0].requestFocus();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -124,6 +168,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
         backgroundColor: Colors.black,
       ),
     );
+
+    // Reset submit state and re-enable auto-fill after 5s
+    _canSubmit = false;
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        _autoFillOtp(); // Re-fill new code
+      }
+    });
   }
 
   @override
@@ -171,8 +223,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   ),
                   children: [
                     const TextSpan(
-                      text:
-                          'We have sent the code verification to\nyour number: ',
+                      text: 'We have sent the code verification to\nyour number: ',
                     ),
                     TextSpan(
                       text: widget.phoneNumber,
@@ -202,13 +253,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             : Colors.transparent,
                         width: 2,
                       ),
-                      // boxShadow: [
-                      //   BoxShadow(
-                      //     color: Colors.black.withOpacity(0.1),
-                      //     blurRadius: 4,
-                      //     offset: const Offset(0, 2),
-                      //   ),
-                      // ],
                     ),
                     child: TextFormField(
                       controller: _controllers[index],
@@ -229,8 +273,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       ),
                       onChanged: (value) => _onDigitChanged(value, index),
                       onTap: () {
-                        _controllers[index]
-                            .selection = TextSelection.fromPosition(
+                        _controllers[index].selection = TextSelection.fromPosition(
                           TextPosition(offset: _controllers[index].text.length),
                         );
                       },
@@ -258,9 +301,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _handleSubmit,
+                  onPressed: _canSubmit ? _handleSubmit : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: _canSubmit ? Colors.black : Colors.grey.shade300,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

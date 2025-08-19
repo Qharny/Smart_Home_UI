@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "758631852587",
+    "project_id": "luxhome-24b53",
+    "storage_bucket": "luxhome-24b53.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758631852587:android:c06b8cbba21217cb5d986e",
+        "android_client_info": {
+          "package_name": "com.example.smart_home"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxoIbq9cWiILwTM9DVwSSgsETFUXjQG88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
