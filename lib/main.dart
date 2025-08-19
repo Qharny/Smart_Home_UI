@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:smart_home/route/app_route.dart';
+import 'package:smart_home/services/cache_service.dart';
 
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize cache service
+  await CacheService().init();
+  
   runApp(const SmartHomeApp());
 }
 

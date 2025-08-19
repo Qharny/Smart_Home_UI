@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/device.dart';
+import '../repositories/device_repository.dart';
 import '../route/app_route.dart';
+import '../services/cache_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/device_card.dart';
 
@@ -13,9 +16,61 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final DeviceRepository _deviceRepository = DeviceRepository();
+  final CacheService _cacheService = CacheService();
+  List<Device> _devices = [];
+  String _userName = 'Mark';
+  bool _isLoading = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      // Initialize default devices if needed
+      await _deviceRepository.initializeDefaultDevices();
+
+      // Load devices from cache
+      final devices = await _deviceRepository.getAllDevices();
+
+      // Load user name from cache
+      final cachedUserName = _cacheService.getUserName();
+
+      setState(() {
+        _devices = devices;
+        _userName = cachedUserName ?? 'Mark';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleDevice(String deviceId) async {
+    try {
+      await _deviceRepository.toggleDevice(deviceId);
+      await _loadData(); // Reload data to reflect changes
+    } catch (e) {
+      // Handle error
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to toggle device: $e')));
+    }
+  }
+
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF1F2F6),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F2F6),
       body: SafeArea(
@@ -49,9 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       IconButton(
                         onPressed: () {
-                          // TODO: Implement profile
+                          Navigator.pushNamed(context, AppRouter.settings);
                         },
-                        icon: const Icon(Icons.person_outline, size: 24),
+                        icon: const Icon(Icons.settings, size: 24),
                       ),
                     ],
                   ),
@@ -89,15 +144,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(20.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
-                                'Hi Mark,',
-                                style: TextStyle(
+                                'Hi $_userName,',
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -149,73 +204,45 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 20),
 
                     // Devices Grid
-                    GridView.count(
+                    GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                      children: [
-                        DeviceCard(
-                          name: 'Light',
-                          imagePath: 'asset/images/bulb.png',
-                          isOn: false,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.85,
+                          ),
+                      itemCount: _devices.length,
+                      itemBuilder: (context, index) {
+                        final device = _devices[index];
+                        return DeviceCard(
+                          name: device.name,
+                          imagePath: device.imagePath,
+                          isOn: device.isOn,
                           onToggle: (value) {
-                            setState(() {
-                              // TODO: Implement light toggle
-                            });
+                            _toggleDevice(device.id);
                           },
                           onViewControls: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRouter.lightControl,
-                            );
+                            if (device.type == 'light') {
+                              Navigator.pushNamed(
+                                context,
+                                AppRouter.lightControl,
+                              );
+                            } else {
+                              // TODO: Navigate to other device controls
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '${device.name} controls coming soon!',
+                                  ),
+                                ),
+                              );
+                            }
                           },
-                        ),
-                        DeviceCard(
-                          name: 'Fan',
-                          imagePath: 'asset/images/fan.png',
-                          isOn: true,
-                          onToggle: (value) {
-                            setState(() {
-                              // TODO: Implement fan toggle
-                            });
-                          },
-                          onViewControls: () {
-                            // TODO: Navigate to fan controls
-                          },
-                        ),
-                        DeviceCard(
-                          name: 'Light',
-                          imagePath: 'asset/images/bulb.png',
-                          isOn: false,
-                          onToggle: (value) {
-                            setState(() {
-                              // TODO: Implement light toggle
-                            });
-                          },
-                          onViewControls: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRouter.lightControl,
-                            );
-                          },
-                        ),
-                        DeviceCard(
-                          name: 'Fan',
-                          imagePath: 'asset/images/fan.png',
-                          isOn: true,
-                          onToggle: (value) {
-                            setState(() {
-                              // TODO: Implement fan toggle
-                            });
-                          },
-                          onViewControls: () {
-                            // TODO: Navigate to fan controls
-                          },
-                        ),
-                      ],
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 20),
