@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
+import '../route/app_route.dart';
 import '../services/cache_service.dart';
 
 class DeviceControlScreen extends StatefulWidget {
@@ -35,26 +36,36 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
 
   Future<void> _loadDeviceState() async {
     // Load device state from cache service
-    final cachedState = await _cacheService.getDevicePowerState(widget.device.id);
-    print('DeviceControlScreen: Loading state for ${widget.device.name}, cached: $cachedState, widget: ${widget.device.isOn}');
+    final cachedState = await _cacheService.getDevicePowerState(
+      widget.device.id,
+    );
+    print(
+      'DeviceControlScreen: Loading state for ${widget.device.name}, cached: $cachedState, widget: ${widget.device.isOn}',
+    );
     setState(() {
       isDeviceOn = cachedState ?? widget.device.isOn;
     });
-    print('DeviceControlScreen: Final state for ${widget.device.name}: $isDeviceOn');
+    print(
+      'DeviceControlScreen: Final state for ${widget.device.name}: $isDeviceOn',
+    );
   }
 
   Future<void> _updateDeviceState(bool newState) async {
-    print('DeviceControlScreen: Updating state for ${widget.device.name} to: $newState');
+    print(
+      'DeviceControlScreen: Updating state for ${widget.device.name} to: $newState',
+    );
     setState(() {
       isDeviceOn = newState;
     });
-    
+
     // Update device state in repository and cache
     await _deviceRepository.updateDeviceState(widget.device.id, newState);
-    
+
     // Notify parent widget about state change
     widget.onDeviceStateChanged?.call();
-    print('DeviceControlScreen: State updated and parent notified for ${widget.device.name}');
+    print(
+      'DeviceControlScreen: State updated and parent notified for ${widget.device.name}',
+    );
   }
 
   @override
@@ -84,7 +95,10 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                       ],
                     ),
                     child: IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pushReplacementNamed(
+                        context,
+                        AppRouter.devices,
+                      ),
                       icon: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
                   ),
@@ -427,9 +441,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                 child: Image.asset(
                   widget.device.imagePath,
                   fit: BoxFit.contain,
-                  color: isDeviceOn
-                      ? Colors.orange.withOpacity(0.8)
-                      : null,
+                  color: isDeviceOn ? Colors.orange.withOpacity(0.8) : null,
                 ),
               ),
               const SizedBox(height: 20),

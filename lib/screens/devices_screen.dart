@@ -337,29 +337,15 @@ class _DevicesScreenState extends State<DevicesScreen> {
                     ),
                   ),
                   // Add Device Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRouter.addDevice);
-                      },
-                      icon: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      padding: const EdgeInsets.all(8),
-                    ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        AppRouter.addDevice,
+                      );
+                    },
+                    icon: const Icon(Icons.add, size: 20),
+                    tooltip: 'Add Device',
                   ),
                 ],
               ),
@@ -435,7 +421,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                               }
                             },
                             onViewControls: () async {
-                              await Navigator.pushNamed(
+                              await Navigator.pushReplacementNamed(
                                 context,
                                 AppRouter.deviceControl,
                                 arguments: {

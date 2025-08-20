@@ -230,14 +230,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             // Add Device Button
                             IconButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, AppRouter.addDevice);
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  AppRouter.addDevice,
+                                );
                               },
                               icon: const Icon(Icons.add, size: 20),
                               tooltip: 'Add Device',
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, AppRouter.devices);
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  AppRouter.devices,
+                                );
                               },
                               child: const Text(
                                 'View All',
@@ -289,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           onViewControls: () async {
-                            await Navigator.pushNamed(
+                            await Navigator.pushReplacementNamed(
                               context,
                               AppRouter.deviceControl,
                               arguments: {

@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
           // Handle navigation based on selected index
           switch (index) {
             case 2: // Add tab
-              Navigator.pushNamed(context, AppRouter.addDevice);
+              Navigator.pushReplacementNamed(context, AppRouter.addDevice);
               // Reset to home tab after navigation
               setState(() {
                 _selectedIndex = 0;
