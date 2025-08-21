@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
 import '../route/app_route.dart';
+import '../screens/device_control_screen.dart';
 import '../services/cache_service.dart';
-import '../widgets/device_card.dart';
+import '../widgets/home_device_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -274,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: _devices.length,
                       itemBuilder: (context, index) {
                         final device = _devices[index];
-                        return DeviceCard(
+                        return HomeDeviceCard(
                           deviceId: device.id,
                           name: device.name,
                           imagePath: device.imagePath,
@@ -295,16 +296,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           onViewControls: () async {
-                            await Navigator.pushReplacementNamed(
+                            await Navigator.push(
                               context,
-                              AppRouter.deviceControl,
-                              arguments: {
-                                'device': device,
-                                'onDeviceStateChanged': () {
-                                  // Refresh device list when device state changes
-                                  _refreshDeviceStates();
-                                },
-                              },
+                              MaterialPageRoute(
+                                builder: (context) => DeviceControlScreen(
+                                  device: device,
+                                  onDeviceStateChanged: () {
+                                    // Refresh device list when device state changes
+                                    _refreshDeviceStates();
+                                  },
+                                ),
+                              ),
                             );
                           },
                         );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/cache_service.dart';
 
-class DeviceCard extends StatefulWidget {
+class DevicePageCard extends StatefulWidget {
   final String deviceId;
   final String name;
   final String imagePath;
@@ -10,7 +10,7 @@ class DeviceCard extends StatefulWidget {
   final Function(bool) onToggle;
   final VoidCallback? onViewControls;
 
-  const DeviceCard({
+  const DevicePageCard({
     super.key,
     required this.deviceId,
     required this.name,
@@ -21,10 +21,10 @@ class DeviceCard extends StatefulWidget {
   });
 
   @override
-  State<DeviceCard> createState() => _DeviceCardState();
+  State<DevicePageCard> createState() => _DevicePageCardState();
 }
 
-class _DeviceCardState extends State<DeviceCard> {
+class _DevicePageCardState extends State<DevicePageCard> {
   bool _localIsOn = false;
   final CacheService _cacheService = CacheService();
 
@@ -40,33 +40,35 @@ class _DeviceCardState extends State<DeviceCard> {
       widget.deviceId,
     );
     print(
-      'DeviceCard: Loading state for ${widget.name} (${widget.deviceId}), cached: $cachedState, widget.isOn: ${widget.isOn}',
+      'DevicePageCard: Loading state for ${widget.name} (${widget.deviceId}), cached: $cachedState, widget.isOn: ${widget.isOn}',
     );
     setState(() {
       _localIsOn = cachedState ?? widget.isOn;
     });
-    print('DeviceCard: Final local state for ${widget.name}: $_localIsOn');
+    print('DevicePageCard: Final local state for ${widget.name}: $_localIsOn');
   }
 
   @override
-  void didUpdateWidget(DeviceCard oldWidget) {
+  void didUpdateWidget(DevicePageCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isOn != widget.isOn) {
       print(
-        'DeviceCard: Widget state changed for ${widget.name}, old: ${oldWidget.isOn}, new: ${widget.isOn}',
+        'DevicePageCard: Widget state changed for ${widget.name}, old: ${oldWidget.isOn}, new: ${widget.isOn}',
       );
       setState(() {
         _localIsOn = widget.isOn;
       });
-      print('DeviceCard: Updated local state for ${widget.name}: $_localIsOn');
+      print(
+        'DevicePageCard: Updated local state for ${widget.name}: $_localIsOn',
+      );
     }
   }
 
   Future<void> _handleToggle() async {
     print(
-      'DeviceCard: Toggle tapped for ${widget.name}, current state: $_localIsOn',
+      'DevicePageCard: Toggle tapped for ${widget.name}, current state: $_localIsOn',
     ); // Debug log
-    print('DeviceCard: Calling onToggle with: ${!_localIsOn}'); // Debug log
+    print('DevicePageCard: Calling onToggle with: ${!_localIsOn}'); // Debug log
 
     // Update local state immediately for visual feedback
     setState(() {
@@ -76,7 +78,7 @@ class _DeviceCardState extends State<DeviceCard> {
     // Call the parent callback
     await widget.onToggle(_localIsOn);
     print(
-      'DeviceCard: Toggle completed for ${widget.name}, new state: $_localIsOn',
+      'DevicePageCard: Toggle completed for ${widget.name}, new state: $_localIsOn',
     );
   }
 

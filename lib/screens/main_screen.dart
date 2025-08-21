@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../route/app_route.dart';
 import '../widgets/bottom_nav_bar.dart';
-import 'devices_screen.dart';
 import 'home_screen.dart';
 
 class MainScreen extends StatefulWidget {
