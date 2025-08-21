@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
 import '../route/app_route.dart';
 import '../services/cache_service.dart';
+import '../services/theme_service.dart';
 import '../widgets/home_device_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -113,40 +115,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F2F6),
       drawer: _buildDrawer(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, AppRouter.notifications);
+            },
+            icon: const Icon(Icons.notifications_outlined, size: 24),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Hamburger menu
-                  IconButton(
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    icon: const Icon(Icons.menu, size: 24),
-                  ),
-                  // Right side icons
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, AppRouter.notifications);
-                        },
-                        icon: const Icon(
-                          Icons.notifications_outlined,
-                          size: 24,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
             // Main Content
             Expanded(
               child: SingleChildScrollView(
@@ -311,139 +293,92 @@ class _HomeScreenState extends State<HomeScreen> {
             // Header with user info
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [const Color(0xFF667eea), const Color(0xFF764ba2)],
-                ),
-              ),
               child: Column(
                 children: [
                   // User avatar
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(40),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 2,
-                      ),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      borderRadius: BorderRadius.circular(50),
                     ),
                     child: Icon(
                       Icons.person,
                       size: 40,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black
+                          : Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
                   // User name
                   Text(
                     _userName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // User email/status
-                  Text(
-                    'Smart Home User',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   ),
                 ],
               ),
             ),
+            Divider(),
 
             // Menu items
             Expanded(
               child: ListView(
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
                 children: [
                   _buildDrawerItem(
-                    icon: Icons.home,
-                    title: 'Home',
+                    // icon: Icons.home,
+                    title: 'Settings',
                     onTap: () {
                       Navigator.pop(context);
                     },
                     isSelected: true,
                   ),
-                  _buildDrawerItem(
-                    icon: Icons.devices,
-                    title: 'Devices',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, AppRouter.devices);
+                  Divider(),
+                  Consumer<ThemeService>(
+                    builder: (context, themeService, child) {
+                      return ListTile(
+                        title: Text(
+                          'Dark Mode',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                        trailing: Switch(
+                          value: themeService.isDarkMode,
+                          onChanged: (value) {
+                            themeService.toggleTheme();
+                          },
+                        ),
+                        onTap: () {
+                          themeService.toggleTheme();
+                        },
+                      );
                     },
                   ),
+                  Divider(),
                   _buildDrawerItem(
-                    icon: Icons.add_circle_outline,
-                    title: 'Add Device',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, AppRouter.addDevice);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.qr_code_scanner,
-                    title: 'Scan QR Code',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, AppRouter.scan);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _buildDrawerItem(
-                    icon: Icons.settings,
-                    title: 'Settings',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, AppRouter.settings);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.help_outline,
-                    title: 'Help & Support',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showHelpDialog();
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.info_outline,
-                    title: 'About',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showAboutDialog();
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // Logout section
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-                  _buildDrawerItem(
-                    icon: Icons.logout,
+                    // icon: Icons.add_circle_outline,
                     title: 'Logout',
                     onTap: () {
-                      Navigator.pop(context);
                       _showLogoutDialog();
                     },
-                    textColor: Colors.red,
-                    iconColor: Colors.red,
                   ),
+                  Divider(),
                 ],
               ),
             ),
@@ -454,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawerItem({
-    required IconData icon,
+    // required IconData icon,
     required String title,
     required VoidCallback onTap,
     bool isSelected = false,
@@ -462,13 +397,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Color? iconColor,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color:
-            iconColor ??
-            (isSelected ? const Color(0xFF667eea) : Colors.grey[600]),
-        size: 24,
-      ),
+      // leading: Icon(
+      //   icon,
+      //   color:
+      //      Colors.black,
+      //   size: 24,
+      // ),
       title: Text(
         title,
         style: TextStyle(
@@ -476,38 +410,21 @@ class _HomeScreenState extends State<HomeScreen> {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           color:
               textColor ??
-              (isSelected ? const Color(0xFF667eea) : Colors.black87),
+              (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black),
         ),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: 15,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black,
       ),
       onTap: onTap,
       selected: isSelected,
       selectedTileColor: const Color(0xFF667eea).withOpacity(0.1),
-    );
-  }
-
-  void _showHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Help & Support'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Need help with your smart home?'),
-            SizedBox(height: 8),
-            Text('• Contact us: support@smarthome.com'),
-            Text('• Call us: +1 (555) 123-4567'),
-            Text('• Visit our website: www.smarthome.com'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
     );
   }
 

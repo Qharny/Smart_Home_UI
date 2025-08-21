@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_home/route/app_route.dart';
 import 'package:smart_home/services/cache_service.dart';
+import 'package:smart_home/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,16 +18,19 @@ class SmartHomeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Smart Home',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'SF Pro Display',
-        scaffoldBackgroundColor: Colors.white,
+    return ChangeNotifierProvider(
+      create: (_) => ThemeService(),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, child) {
+          return MaterialApp(
+            title: 'Smart Home',
+            debugShowCheckedModeBanner: false,
+            theme: themeService.currentTheme,
+            initialRoute: AppRouter.splash,
+            onGenerateRoute: AppRouter.generateRoute,
+          );
+        },
       ),
-      initialRoute: AppRouter.splash,
-      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
