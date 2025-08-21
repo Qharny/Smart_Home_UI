@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
 import '../route/app_route.dart';
-import '../screens/device_control_screen.dart';
 import '../services/cache_service.dart';
 import '../widgets/home_device_card.dart';
 
@@ -228,20 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Row(
                           children: [
-                            // Add Device Button
-                            IconButton(
-                              onPressed: () {
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  AppRouter.addDevice,
-                                );
-                              },
-                              icon: const Icon(Icons.add, size: 20),
-                              tooltip: 'Add Device',
-                            ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushReplacementNamed(
+                                Navigator.pushNamed(
                                   context,
                                   AppRouter.devices,
                                 );
@@ -296,17 +284,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           onViewControls: () async {
-                            await Navigator.push(
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => DeviceControlScreen(
-                                  device: device,
-                                  onDeviceStateChanged: () {
-                                    // Refresh device list when device state changes
-                                    _refreshDeviceStates();
-                                  },
-                                ),
-                              ),
+                              AppRouter.lightControl,
+                              arguments: {
+                                'deviceName': device.name,
+                                'deviceId': device.id,
+                                'isOn': device.isOn,
+                                'brightness': 47.0, // Default brightness
+                                'imagePath': device.imagePath,
+                              },
                             );
                           },
                         );

@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:smart_home/screens/devices_screen.dart';
 
-import '../screens/add_device_screen.dart';
-import '../screens/device_added_success_screen.dart';
-import '../screens/device_control_screen.dart';
-import '../screens/devices_screen.dart';
 import '../screens/light_control_screen.dart';
 import '../screens/main_screen.dart';
 import '../screens/otp.dart';
-import '../screens/scan_screen.dart';
-import '../screens/settings_screen.dart';
 import '../screens/splash.dart';
 import '../screens/welcome_screen.dart';
 
@@ -43,28 +38,17 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const MainScreen());
       case devices:
         return MaterialPageRoute(builder: (_) => const DevicesScreen());
-      case addDevice:
-        return MaterialPageRoute(builder: (_) => const AddDeviceScreen());
-      case scan:
-        return MaterialPageRoute(builder: (_) => const ScanScreen());
-      case deviceAddedSuccess:
-        final args = routeSettings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) =>
-              DeviceAddedSuccessScreen(deviceName: args?['deviceName']),
-        );
       case lightControl:
-        return MaterialPageRoute(builder: (_) => const LightControlScreen());
-      case deviceControl:
         final args = routeSettings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => DeviceControlScreen(
-            device: args?['device'],
-            onDeviceStateChanged: args?['onDeviceStateChanged'],
+          builder: (_) => LightControlScreen(
+            deviceName: args?['deviceName'] ?? 'Light bulb',
+            deviceId: args?['deviceId'] ?? '',
+            isOn: args?['isOn'] ?? false,
+            brightness: args?['brightness'] ?? 47.0,
+            imagePath: args?['imagePath'] ?? 'asset/images/light_bulb.png',
           ),
         );
-      case settings:
-        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

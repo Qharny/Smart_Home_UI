@@ -17,12 +17,19 @@ class _DevicesScreenState extends State<DevicesScreen> {
   final DeviceRepository _deviceRepository = DeviceRepository();
   final CacheService _cacheService = CacheService();
   List<Device> _devices = [];
+  String _selectedFilter = 'Living-room';
   bool _isLoading = true;
+
+  final List<Map<String, dynamic>> _filters = [
+    {'name': 'Living-room', 'icon': Icons.chair},
+    {'name': 'Exterior', 'icon': Icons.outdoor_grill},
+    {'name': 'Living-room', 'icon': Icons.chair},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _loadDevices();
+    _loadData();
   }
 
   @override
@@ -31,10 +38,11 @@ class _DevicesScreenState extends State<DevicesScreen> {
     _refreshDeviceStates();
   }
 
-  Future<void> _loadDevices() async {
+  Future<void> _loadData() async {
     try {
       await _deviceRepository.forceReinitializeDevices();
       final devices = await _deviceRepository.getAllDevices();
+
       setState(() {
         _devices = devices;
         _isLoading = false;
@@ -43,6 +51,17 @@ class _DevicesScreenState extends State<DevicesScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _toggleDevice(String deviceId) async {
+    try {
+      await _deviceRepository.toggleDevice(deviceId);
+      await _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to toggle device: $e')));
     }
   }
 
@@ -56,109 +75,147 @@ class _DevicesScreenState extends State<DevicesScreen> {
     setState(() {});
   }
 
-  Future<void> _toggleDevice(String deviceId, bool newState) async {
-    try {
-      if (newState) {
-        await _deviceRepository.updateDeviceState(deviceId, true);
-      } else {
-        await _deviceRepository.updateDeviceState(deviceId, false);
-      }
-      await _loadDevices();
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to toggle device: $e')));
-    }
-  }
-
-  void _navigateToDeviceControl(Device device) {
-    Navigator.pushNamed(context, AppRouter.deviceControl, arguments: device);
+  void _onFilterChanged(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F2F6),
-      appBar: AppBar(
-        title: const Text(
-          'Devices',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRouter.addDevice);
-            },
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _devices.isEmpty
-          ? Center(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header Section
+            Padding(
+              padding: const EdgeInsets.all(20.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.devices_other, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No devices found',
-                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add your first device to get started',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRouter.addDevice);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007AFF),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                  // Title
+                  const Text(
+                    'Devices',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    child: const Text(
-                      'Add Device',
-                      style: TextStyle(color: Colors.white),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Filter Buttons
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _filters.map((filter) {
+                        final isSelected = filter['name'] == _selectedFilter;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: GestureDetector(
+                            onTap: () => _onFilterChanged(filter['name']),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.black : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.grey[300]!,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    filter['icon'],
+                                    size: 16,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    filter['name'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadDevices,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _devices.length,
-                itemBuilder: (context, index) {
-                  final device = _devices[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DevicePageCard(
-                      deviceId: device.id,
-                      name: device.name,
-                      imagePath: device.imagePath,
-                      isOn: device.isOn,
-                      onToggle: (newState) =>
-                          _toggleDevice(device.id, newState),
-                      onViewControls: () => _navigateToDeviceControl(device),
-                    ),
-                  );
-                },
-              ),
             ),
+
+            // Devices Grid
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.85,
+                          ),
+                      itemCount: _devices.length,
+                      itemBuilder: (context, index) {
+                        final device = _devices[index];
+                        return DevicePageCard(
+                          deviceId: device.id,
+                          name: device.name,
+                          imagePath: device.imagePath,
+                          isOn: device.isOn,
+                          onToggle: (value) async {
+                            try {
+                              await _toggleDevice(device.id);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to toggle device: $e'),
+                                ),
+                              );
+                            }
+                          },
+                          onViewControls: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRouter.lightControl,
+                              arguments: {
+                                'deviceName': device.name,
+                                'deviceId': device.id,
+                                'isOn': device.isOn,
+                                'brightness': 47.0,
+                                'imagePath': device.imagePath,
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

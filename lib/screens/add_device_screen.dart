@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../route/app_route.dart';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   const AddDeviceScreen({super.key});
@@ -14,6 +13,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   final TextEditingController _assignedNameController = TextEditingController();
   final TextEditingController _zoneController = TextEditingController();
   final TextEditingController _protocolController = TextEditingController();
+  
+  bool _isScanning = false;
+  QRViewController? _qrViewController;
 
   @override
   void dispose() {
@@ -21,282 +23,256 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     _assignedNameController.dispose();
     _zoneController.dispose();
     _protocolController.dispose();
+    _qrViewController?.dispose();
     super.dispose();
   }
 
-  void _scanQRCode() async {
-    // Navigate to scan screen and wait for result
-    final result = await Navigator.pushNamed(context, AppRouter.scan);
-
-    if (result != null && result is String) {
-      // Handle the scanned QR code
-      setState(() {
-        _uniqueIdController.text = result;
-      });
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('QR Code scanned: $result'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+  void _startScanning() {
+    setState(() {
+      _isScanning = true;
+    });
   }
 
-  void _submitForm() {
-    // TODO: Implement form submission
-    if (_uniqueIdController.text.isEmpty ||
-        _assignedNameController.text.isEmpty ||
-        _zoneController.text.isEmpty ||
-        _protocolController.text.isEmpty) {
+  void _stopScanning() {
+    setState(() {
+      _isScanning = false;
+    });
+    _qrViewController?.dispose();
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    _qrViewController = controller;
+    controller.scannedDataStream.listen((scanData) {
+      if (scanData.code != null) {
+        // Handle scanned QR code data
+        _uniqueIdController.text = scanData.code!;
+        _stopScanning();
+      }
+    });
+  }
+
+  void _submitDevice() {
+    // Validate and submit device data
+    if (_uniqueIdController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
+        const SnackBar(content: Text('Please enter a Unique ID')),
       );
       return;
     }
 
-    // Navigate to success screen
-    Navigator.pushReplacementNamed(
-      context,
-      AppRouter.deviceAddedSuccess,
-      arguments: {'deviceName': _assignedNameController.text},
+    // TODO: Implement device submission logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Device added successfully!')),
     );
+    
+    // Navigate back
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pop(context);
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF1F2F6),
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF1F2F6),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Bar
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    // Back button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+              // Header
+              const Text(
+                'Add devices',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Click to scan section
+              const Text(
+                'Click to scan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // QR Scanner Area
+              GestureDetector(
+                onTap: _startScanning,
+                child: Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A4A4A),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
-                      child: IconButton(
-                        onPressed: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          } else {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              AppRouter.devices,
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    ],
+                  ),
+                  child: _isScanning
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: QRView(
+                            key: const Key('qr_view'),
+                            onQRViewCreated: _onQRViewCreated,
+                            overlay: QrScannerOverlayShape(
+                              borderColor: Colors.white,
+                              borderRadius: 10,
+                              borderLength: 30,
+                              borderWidth: 10,
+                              cutOutSize: 200,
+                            ),
+                          ),
+                        )
+                      : Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // QR Code pattern background
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: CustomPaint(
+                                painter: QRCodePainter(),
+                              ),
+                            ),
+                            // Scan text
+                            const Text(
+                              'Scan',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Separator with "or"
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.grey[300],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'or',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    // Title
-                    const Text(
-                      'Add devices',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.grey[300],
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Add manually section
+              const Text(
+                'Add manually',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Input fields
+              Expanded(
+                child: Column(
+                  children: [
+                    // Unique ID field
+                    _buildInputField(
+                      controller: _uniqueIdController,
+                      label: 'Unique ID:',
+                      placeholder: 'Enter unique ID',
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Assigned name field
+                    _buildInputField(
+                      controller: _assignedNameController,
+                      label: 'Assigned name',
+                      placeholder: 'Enter device name',
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Zone field
+                    _buildInputField(
+                      controller: _zoneController,
+                      label: 'Zone',
+                      placeholder: 'Enter zone',
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Protocol field
+                    _buildInputField(
+                      controller: _protocolController,
+                      label: 'Protocol',
+                      placeholder: 'Enter protocol',
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Submit button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _submitDevice,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Scan Section
-                      const Text(
-                        'Click to scan',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // QR Code Scan Area
-                      GestureDetector(
-                        onTap: _scanQRCode,
-                        child: Container(
-                          width: double.infinity,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: Stack(
-                            children: [
-                              // QR Code Pattern (simulated)
-                              Center(
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[400],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.qr_code,
-                                    size: 80,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                              // Scan Button Overlay
-                              Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Text(
-                                    'Scan',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Separator with "or"
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              color: Colors.grey[300],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'or',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              color: Colors.grey[300],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Manual Add Section
-                      const Text(
-                        'Add manually',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Input Fields
-                      _buildInputField(
-                        controller: _uniqueIdController,
-                        label: 'Unique ID:',
-                        hint: 'Enter unique ID',
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildInputField(
-                        controller: _assignedNameController,
-                        label: 'Assigned name',
-                        hint: 'Enter device name',
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildInputField(
-                        controller: _zoneController,
-                        label: 'Zone',
-                        hint: 'Enter zone',
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildInputField(
-                        controller: _protocolController,
-                        label: 'Protocol',
-                        hint: 'Enter protocol',
-                      ),
-                      const SizedBox(height: 30),
-
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _submitForm,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -309,7 +285,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   Widget _buildInputField({
     required TextEditingController controller,
     required String label,
-    required String hint,
+    required String placeholder,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,23 +302,21 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
           ),
           child: TextField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: hint,
+              hintText: placeholder,
+              hintStyle: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 14,
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
-                vertical: 16,
+                vertical: 12,
               ),
             ),
           ),
@@ -351,3 +325,33 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 }
+
+// Custom painter for QR code pattern
+class QRCodePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..strokeWidth = 2;
+
+    // Draw QR code pattern
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        if ((i + j) % 2 == 0) {
+          canvas.drawRect(
+            Rect.fromLTWH(
+              i * (size.width / 8),
+              j * (size.height / 8),
+              size.width / 8,
+              size.height / 8,
+            ),
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+} 

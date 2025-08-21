@@ -1,277 +1,385 @@
 import 'package:flutter/material.dart';
 
 class LightControlScreen extends StatefulWidget {
-  const LightControlScreen({super.key});
+  final String deviceName;
+  final String deviceId;
+  final bool isOn;
+  final double brightness;
+  final String imagePath;
+
+  const LightControlScreen({
+    super.key,
+    required this.deviceName,
+    required this.deviceId,
+    required this.isOn,
+    this.brightness = 47.0,
+    required this.imagePath,
+  });
 
   @override
   State<LightControlScreen> createState() => _LightControlScreenState();
 }
 
 class _LightControlScreenState extends State<LightControlScreen> {
-  bool isLightOn = true;
-  double brightness = 0.47; // 47%
-  String selectedRoom = 'Livingroom';
-  bool hasAutomation = true;
+  late bool _isOn;
+  late double _brightness;
+  String _selectedRoom = 'Livingroom';
+  final List<String> _rooms = ['Livingroom', 'Bedroom', 'Kitchen', 'Bathroom'];
+
+  @override
+  void initState() {
+    super.initState();
+    _isOn = widget.isOn;
+    _brightness = widget.brightness;
+  }
+
+  void _togglePower() {
+    setState(() {
+      _isOn = !_isOn;
+    });
+  }
+
+  void _updateBrightness(double value) {
+    setState(() {
+      _brightness = value;
+    });
+  }
+
+  void _increaseBrightness() {
+    setState(() {
+      _brightness = (_brightness + 5).clamp(0.0, 100.0);
+    });
+  }
+
+  void _decreaseBrightness() {
+    setState(() {
+      _brightness = (_brightness - 5).clamp(0.0, 100.0);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F2F6),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top section with back button and title
+              // Top Section - Back button, title, and toggle
               Row(
                 children: [
                   // Back button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 20,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 20),
+
                   // Title
                   const Text(
                     'Light bulb',
                     style: TextStyle(
                       fontSize: 28,
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 30),
 
-              // Toggle and Room Selection Row
+              // Toggle and Room Selection
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Toggle Switch
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Switch(
-                        value: isLightOn,
-                        onChanged: (value) {
-                          setState(() {
-                            isLightOn = value;
-                          });
-                        },
-                        activeColor: Colors.black,
-                        inactiveThumbColor: Colors.white,
-                        inactiveTrackColor: Colors.grey[300],
-                        activeTrackColor: Colors.black,
-                        activeThumbColor: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isLightOn ? 'On' : 'Off',
-                        style: const TextStyle(
+                      const Text(
+                        'On',
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Colors.black,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: _togglePower,
+                        child: Container(
+                          width: 50,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: _isOn ? Colors.black : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Stack(
+                            children: [
+                              AnimatedPositioned(
+                                duration: const Duration(milliseconds: 200),
+                                left: _isOn ? 22 : 2,
+                                top: 2,
+                                child: Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const Spacer(),
+
                   // Room Dropdown
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 12,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          selectedRoom,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.keyboard_arrow_down,
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedRoom,
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        style: const TextStyle(
                           color: Colors.black,
+                          fontSize: 16,
                         ),
-                      ],
+                        items: _rooms.map((String room) {
+                          return DropdownMenuItem<String>(
+                            value: room,
+                            child: Text(room),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedRoom = newValue;
+                            });
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 40),
 
-              // Brightness Control and Light Bulb Section
+              // Middle Section - Brightness Control and Light Bulb
               Expanded(
                 child: Row(
                   children: [
-                    // Left side - Brightness Controls
-                    Column(
-                      children: [
-                        // Plus button
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
+                    // Left Side - Brightness Slider
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        children: [
+                          // Increase button
+                          GestureDetector(
+                            onTap: _increaseBrightness,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                brightness = (brightness + 0.1).clamp(0.0, 1.0);
-                              });
-                            },
-                            icon: const Icon(Icons.add, color: Colors.black),
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // Brightness Slider
-                        Container(
-                          height: 250,
-                          width: 60,
-                          // decoration: BoxDecoration(
-                          //   color: Colors.white,
-                          //   borderRadius: BorderRadius.circular(30),
-                          //   boxShadow: [
-                          //     BoxShadow(
-                          //       color: Colors.black.withOpacity(0.1),
-                          //       blurRadius: 10,
-                          //       offset: const Offset(0, 2),
-                          //     ),
-                          //   ],
-                          // ),
-                          child: RotatedBox(
-                            quarterTurns: 3,
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                trackHeight: 8,
-                                thumbShape: const RoundSliderThumbShape(
-                                  enabledThumbRadius: 12,
-                                ),
-                                overlayShape: const RoundSliderOverlayShape(
-                                  overlayRadius: 20,
-                                ),
-                                activeTrackColor: Colors.black,
-                                inactiveTrackColor: Colors.grey[300],
-                                thumbColor: Colors.black,
-                              ),
-                              child: Slider(
-                                value: brightness,
-                                onChanged: (value) {
-                                  setState(() {
-                                    brightness = value;
-                                  });
-                                },
-                                min: 0.0,
-                                max: 1.0,
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.black,
+                                size: 20,
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
 
-                        // Minus button
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
+                          const SizedBox(height: 20),
+
+                          // Vertical Slider
+                          Expanded(
+                            child: RotatedBox(
+                              quarterTurns: 3,
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 8,
+                                  thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 12,
+                                  ),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 20,
+                                  ),
+                                  activeTrackColor: Colors.black,
+                                  inactiveTrackColor: Colors.grey[300],
+                                  thumbColor: Colors.black,
+                                ),
+                                child: Slider(
+                                  value: _brightness,
+                                  min: 0,
+                                  max: 100,
+                                  onChanged: _updateBrightness,
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                brightness = (brightness - 0.1).clamp(0.0, 1.0);
-                              });
-                            },
-                            icon: const Icon(Icons.remove, color: Colors.black),
-                            padding: EdgeInsets.zero,
+
+                          const SizedBox(height: 20),
+
+                          // Decrease button
+                          GestureDetector(
+                            onTap: _decreaseBrightness,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.remove,
+                                color: Colors.black,
+                                size: 20,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+
                     const SizedBox(width: 40),
-                    // Right side - Light Bulb Image and Brightness Display
+
+                    // Right Side - Device Image
                     Expanded(
+                      flex: 2,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Light Bulb Image
+                          // Device Image with glow effect
                           Container(
                             width: 120,
-                            height: 150,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isLightOn
-                                      ? Colors.orange.withOpacity(0.3)
-                                      : Colors.transparent,
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
+                            height: 160,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Glow effect when device is on
+                                if (_isOn)
+                                  Container(
+                                    width: 140,
+                                    height: 180,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.orange.withOpacity(0.3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.orange.withOpacity(0.5),
+                                          blurRadius: 30,
+                                          spreadRadius: 10,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                // Device image
+                                Container(
+                                  width: 100,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      widget.imagePath,
+                                      fit: BoxFit.cover,
+                                      color: _isOn ? null : Colors.grey[400],
+                                      colorBlendMode: _isOn
+                                          ? null
+                                          : BlendMode.saturation,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Image.asset(
-                              'asset/images/bulb.png',
-                              fit: BoxFit.contain,
-                              color: isLightOn
-                                  ? Colors.orange.withOpacity(0.8)
-                                  : Colors.grey[400],
-                            ),
                           ),
+
                           const SizedBox(height: 20),
-                          // Brightness Percentage
+
+                          // Brightness percentage
                           Text(
-                            '${(brightness * 100).round()}%',
+                            '${_brightness.round()}%',
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 4),
+
+                          const SizedBox(height: 8),
+
+                          // Brightness label
                           const Text(
                             'Brightness',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -280,13 +388,14 @@ class _LightControlScreenState extends State<LightControlScreen> {
                 ),
               ),
 
-              // Automation Section
+              const SizedBox(height: 40),
+
+              // Bottom Section - Automation
               Container(
-                width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -298,7 +407,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Automation Header
+                    // Automation header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -310,98 +419,132 @@ class _LightControlScreenState extends State<LightControlScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(12),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Add automation logic
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[100],
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                           ),
                           child: const Text(
                             'Add +',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 16),
-                    // Automation Entry
-                    if (hasAutomation)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Time',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                const Text(
-                                  '2pm',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
+
+                    // Automation table header
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'Time',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
                             ),
                           ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                const Text(
-                                  'Off',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'Status',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
                             ),
                           ),
-                          Container(
+                        ),
+                        const SizedBox(width: 40), // Space for delete button
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Automation entry
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              '2pm',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Off',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
+                            // Delete automation logic
+                          },
+                          child: Container(
                             width: 30,
                             height: 30,
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.red[50],
+                              shape: BoxShape.circle,
                             ),
-                            child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  hasAutomation = false;
-                                });
-                              },
-                              icon: const Icon(
-                                Icons.remove,
-                                size: 16,
-                                color: Colors.black,
-                              ),
-                              padding: EdgeInsets.zero,
+                            child: Icon(
+                              Icons.remove,
+                              size: 16,
+                              color: Colors.red[400],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

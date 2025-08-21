@@ -37,7 +37,7 @@ class BottomNavBar extends StatelessWidget {
               isSelected: selectedIndex == 0,
             ),
             _buildNavItem(
-              icon: Icons.devices,
+              icon: Icons.memory,
               label: 'Devices',
               index: 1,
               isSelected: selectedIndex == 1,
