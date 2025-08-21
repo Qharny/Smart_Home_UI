@@ -2,29 +2,34 @@ import 'package:flutter/material.dart';
 
 import '../repositories/device_repository.dart';
 
-class LightControlScreen extends StatefulWidget {
+class DeviceControlScreen extends StatefulWidget {
   final String deviceName;
   final String deviceId;
+  final String deviceType;
   final bool isOn;
   final double brightness;
+  final double speed;
   final String imagePath;
 
-  const LightControlScreen({
+  const DeviceControlScreen({
     super.key,
     required this.deviceName,
     required this.deviceId,
+    required this.deviceType,
     required this.isOn,
-    this.brightness = 47.0,
+    this.brightness = 50.0,
+    this.speed = 50.0,
     required this.imagePath,
   });
 
   @override
-  State<LightControlScreen> createState() => _LightControlScreenState();
+  State<DeviceControlScreen> createState() => _DeviceControlScreenState();
 }
 
-class _LightControlScreenState extends State<LightControlScreen> {
+class _DeviceControlScreenState extends State<DeviceControlScreen> {
   late bool _isOn;
   late double _brightness;
+  late double _speed;
   String _selectedRoom = 'Livingroom';
   final List<String> _rooms = ['Livingroom', 'Bedroom', 'Kitchen', 'Bathroom'];
   final DeviceRepository _deviceRepository = DeviceRepository();
@@ -34,6 +39,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
     super.initState();
     _isOn = widget.isOn;
     _brightness = widget.brightness;
+    _speed = widget.speed;
   }
 
   Future<void> _togglePower() async {
@@ -68,19 +74,48 @@ class _LightControlScreenState extends State<LightControlScreen> {
     setState(() {
       _brightness = value;
     });
+    _deviceRepository.updateDeviceBrightness(widget.deviceId, value);
   }
 
-  void _increaseBrightness() {
+  void _updateSpeed(double value) {
     setState(() {
-      _brightness = (_brightness + 5).clamp(0.0, 100.0);
+      _speed = value;
     });
+    _deviceRepository.updateDeviceSpeed(widget.deviceId, value);
   }
 
-  void _decreaseBrightness() {
-    setState(() {
-      _brightness = (_brightness - 5).clamp(0.0, 100.0);
-    });
+  void _increaseValue() {
+    if (widget.deviceType == 'light') {
+      setState(() {
+        _brightness = (_brightness + 5).clamp(0.0, 100.0);
+      });
+      _deviceRepository.updateDeviceBrightness(widget.deviceId, _brightness);
+    } else if (widget.deviceType == 'fan') {
+      setState(() {
+        _speed = (_speed + 5).clamp(0.0, 100.0);
+      });
+      _deviceRepository.updateDeviceSpeed(widget.deviceId, _speed);
+    }
   }
+
+  void _decreaseValue() {
+    if (widget.deviceType == 'light') {
+      setState(() {
+        _brightness = (_brightness - 5).clamp(0.0, 100.0);
+      });
+      _deviceRepository.updateDeviceBrightness(widget.deviceId, _brightness);
+    } else if (widget.deviceType == 'fan') {
+      setState(() {
+        _speed = (_speed - 5).clamp(0.0, 100.0);
+      });
+      _deviceRepository.updateDeviceSpeed(widget.deviceId, _speed);
+    }
+  }
+
+  double get _currentValue =>
+      widget.deviceType == 'light' ? _brightness : _speed;
+  String get _valueLabel =>
+      widget.deviceType == 'light' ? 'Brightness' : 'Speed';
 
   @override
   Widget build(BuildContext context) {
@@ -227,7 +262,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
                         children: [
                           // Increase button
                           GestureDetector(
-                            onTap: _increaseBrightness,
+                            onTap: _increaseValue,
                             child: Container(
                               width: 40,
                               height: 40,
@@ -270,10 +305,12 @@ class _LightControlScreenState extends State<LightControlScreen> {
                                   thumbColor: Colors.black,
                                 ),
                                 child: Slider(
-                                  value: _brightness,
+                                  value: _currentValue,
                                   min: 0,
                                   max: 100,
-                                  onChanged: _updateBrightness,
+                                  onChanged: widget.deviceType == 'light'
+                                      ? _updateBrightness
+                                      : _updateSpeed,
                                 ),
                               ),
                             ),
@@ -283,7 +320,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
 
                           // Decrease button
                           GestureDetector(
-                            onTap: _decreaseBrightness,
+                            onTap: _decreaseValue,
                             child: Container(
                               width: 40,
                               height: 40,
@@ -391,7 +428,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
 
                           // Brightness percentage
                           Text(
-                            '${_brightness.round()}%',
+                            '${_currentValue.round()}%',
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -402,9 +439,12 @@ class _LightControlScreenState extends State<LightControlScreen> {
                           const SizedBox(height: 8),
 
                           // Brightness label
-                          const Text(
-                            'Brightness',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          Text(
+                            _valueLabel,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),

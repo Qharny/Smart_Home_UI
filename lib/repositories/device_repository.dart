@@ -72,6 +72,53 @@ class DeviceRepository {
     }
   }
 
+  // Update device brightness
+  Future<void> updateDeviceBrightness(
+    String deviceId,
+    double brightness,
+  ) async {
+    print(
+      'DeviceRepository: Updating device $deviceId brightness to: $brightness',
+    );
+    final devices = await getAllDevices();
+    final deviceIndex = devices.indexWhere((device) => device.id == deviceId);
+
+    if (deviceIndex != -1) {
+      devices[deviceIndex] = devices[deviceIndex].copyWith(
+        brightness: brightness,
+        lastUpdated: DateTime.now(),
+      );
+
+      await saveAllDevices(devices);
+      print(
+        'DeviceRepository: Device $deviceId brightness updated and saved to cache',
+      );
+    } else {
+      print('DeviceRepository: Device $deviceId not found');
+    }
+  }
+
+  // Update device speed
+  Future<void> updateDeviceSpeed(String deviceId, double speed) async {
+    print('DeviceRepository: Updating device $deviceId speed to: $speed');
+    final devices = await getAllDevices();
+    final deviceIndex = devices.indexWhere((device) => device.id == deviceId);
+
+    if (deviceIndex != -1) {
+      devices[deviceIndex] = devices[deviceIndex].copyWith(
+        speed: speed,
+        lastUpdated: DateTime.now(),
+      );
+
+      await saveAllDevices(devices);
+      print(
+        'DeviceRepository: Device $deviceId speed updated and saved to cache',
+      );
+    } else {
+      print('DeviceRepository: Device $deviceId not found');
+    }
+  }
+
   // Toggle device state
   Future<void> toggleDevice(String deviceId) async {
     print('DeviceRepository: Toggling device: $deviceId'); // Debug log
@@ -159,6 +206,8 @@ class DeviceRepository {
         imagePath: 'asset/images/bulb.png',
         type: 'light',
         isOn: false,
+        brightness: 50.0,
+        speed: 50.0,
       ),
       Device(
         id: 'light_2',
@@ -166,6 +215,8 @@ class DeviceRepository {
         imagePath: 'asset/images/bulb.png',
         type: 'light',
         isOn: false,
+        brightness: 50.0,
+        speed: 50.0,
       ),
       Device(
         id: 'fan_1',
@@ -173,6 +224,8 @@ class DeviceRepository {
         imagePath: 'asset/images/fan.png',
         type: 'fan',
         isOn: true,
+        brightness: 50.0,
+        speed: 50.0,
       ),
       Device(
         id: 'fan_2',
@@ -180,6 +233,8 @@ class DeviceRepository {
         imagePath: 'asset/images/fan.png',
         type: 'fan',
         isOn: true,
+        brightness: 50.0,
+        speed: 50.0,
       ),
     ];
   }

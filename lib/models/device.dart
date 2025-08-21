@@ -4,6 +4,8 @@ class Device {
   final String imagePath;
   final String type;
   bool isOn;
+  double brightness; // For light devices
+  double speed; // For fan devices
   final DateTime? lastUpdated;
   final Map<String, dynamic>? additionalProperties;
 
@@ -13,6 +15,8 @@ class Device {
     required this.imagePath,
     required this.type,
     this.isOn = false,
+    this.brightness = 50.0,
+    this.speed = 50.0,
     this.lastUpdated,
     this.additionalProperties,
   });
@@ -25,6 +29,8 @@ class Device {
       'imagePath': imagePath,
       'type': type,
       'isOn': isOn,
+      'brightness': brightness,
+      'speed': speed,
       'lastUpdated': lastUpdated?.toIso8601String(),
       'additionalProperties': additionalProperties,
     };
@@ -38,6 +44,8 @@ class Device {
       imagePath: map['imagePath'] ?? '',
       type: map['type'] ?? '',
       isOn: map['isOn'] ?? false,
+      brightness: (map['brightness'] ?? 50.0).toDouble(),
+      speed: (map['speed'] ?? 50.0).toDouble(),
       lastUpdated: map['lastUpdated'] != null
           ? DateTime.parse(map['lastUpdated'])
           : null,
@@ -52,6 +60,8 @@ class Device {
     String? imagePath,
     String? type,
     bool? isOn,
+    double? brightness,
+    double? speed,
     DateTime? lastUpdated,
     Map<String, dynamic>? additionalProperties,
   }) {
@@ -61,6 +71,8 @@ class Device {
       imagePath: imagePath ?? this.imagePath,
       type: type ?? this.type,
       isOn: isOn ?? this.isOn,
+      brightness: brightness ?? this.brightness,
+      speed: speed ?? this.speed,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       additionalProperties: additionalProperties ?? this.additionalProperties,
     );

@@ -43,12 +43,14 @@ class AppRouter {
       case lightControl:
         final args = routeSettings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => LightControlScreen(
-            deviceName: args?['deviceName'] ?? 'Light bulb',
+          builder: (_) => DeviceControlScreen(
+            deviceName: args?['deviceName'] ?? 'Device',
             deviceId: args?['deviceId'] ?? '',
+            deviceType: args?['deviceType'] ?? 'light',
             isOn: args?['isOn'] ?? false,
-            brightness: args?['brightness'] ?? 47.0,
-            imagePath: args?['imagePath'] ?? 'asset/images/light_bulb.png',
+            brightness: args?['brightness'] ?? 50.0,
+            speed: args?['speed'] ?? 50.0,
+            imagePath: args?['imagePath'] ?? 'asset/images/bulb.png',
           ),
         );
       case notifications:

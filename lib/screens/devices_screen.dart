@@ -203,8 +203,10 @@ class _DevicesScreenState extends State<DevicesScreen> {
                               arguments: {
                                 'deviceName': device.name,
                                 'deviceId': device.id,
+                                'deviceType': device.type,
                                 'isOn': device.isOn,
-                                'brightness': 47.0,
+                                'brightness': device.brightness,
+                                'speed': device.speed,
                                 'imagePath': device.imagePath,
                               },
                             );
