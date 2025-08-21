@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:smart_home/screens/add_device_screen.dart';
+import 'package:smart_home/screens/devices_screen.dart';
 
 import '../widgets/bottom_nav_bar.dart';
-import 'devices_screen.dart';
 import 'home_screen.dart';
-import 'add_device_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const DevicesScreen(),
-    // const AddDeviceScreen(),
+    const AddDeviceScreen(),
   ];
 
   @override
