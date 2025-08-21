@@ -5,7 +5,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
     
     <application
-        android:label="smart_home"
+        android:label="Smart Home"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

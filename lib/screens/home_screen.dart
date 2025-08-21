@@ -112,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F2F6),
+      drawer: _buildDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -124,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Hamburger menu
                   IconButton(
                     onPressed: () {
-                      // TODO: Implement menu
+                      Scaffold.of(context).openDrawer();
                     },
                     icon: const Icon(Icons.menu, size: 24),
                   ),
@@ -133,19 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          // TODO: Implement notifications
+                          Navigator.pushNamed(context, AppRouter.notifications);
                         },
                         icon: const Icon(
                           Icons.notifications_outlined,
                           size: 24,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, AppRouter.settings);
-                        },
-                        icon: const Icon(Icons.settings, size: 24),
                       ),
                     ],
                   ),
@@ -229,10 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRouter.devices,
-                                );
+                                Navigator.pushNamed(context, AppRouter.devices);
                               },
                               child: const Text(
                                 'View All',
@@ -307,6 +298,275 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            // Header with user info
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [const Color(0xFF667eea), const Color(0xFF764ba2)],
+                ),
+              ),
+              child: Column(
+                children: [
+                  // User avatar
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // User name
+                  Text(
+                    _userName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // User email/status
+                  Text(
+                    'Smart Home User',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Menu items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildDrawerItem(
+                    icon: Icons.home,
+                    title: 'Home',
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    isSelected: true,
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.devices,
+                    title: 'Devices',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.devices);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.add_circle_outline,
+                    title: 'Add Device',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.addDevice);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.qr_code_scanner,
+                    title: 'Scan QR Code',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.scan);
+                    },
+                  ),
+                  const Divider(height: 1),
+                  _buildDrawerItem(
+                    icon: Icons.settings,
+                    title: 'Settings',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.settings);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.help_outline,
+                    title: 'Help & Support',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showHelpDialog();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.info_outline,
+                    title: 'About',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog();
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Logout section
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Divider(height: 1),
+                  const SizedBox(height: 16),
+                  _buildDrawerItem(
+                    icon: Icons.logout,
+                    title: 'Logout',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showLogoutDialog();
+                    },
+                    textColor: Colors.red,
+                    iconColor: Colors.red,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isSelected = false,
+    Color? textColor,
+    Color? iconColor,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color:
+            iconColor ??
+            (isSelected ? const Color(0xFF667eea) : Colors.grey[600]),
+        size: 24,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          color:
+              textColor ??
+              (isSelected ? const Color(0xFF667eea) : Colors.black87),
+        ),
+      ),
+      onTap: onTap,
+      selected: isSelected,
+      selectedTileColor: const Color(0xFF667eea).withOpacity(0.1),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Need help with your smart home?'),
+            SizedBox(height: 8),
+            Text('• Contact us: support@smarthome.com'),
+            Text('• Call us: +1 (555) 123-4567'),
+            Text('• Visit our website: www.smarthome.com'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About Smart Home'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Smart Home App'),
+            SizedBox(height: 4),
+            Text('Version 1.0.0'),
+            SizedBox(height: 8),
+            Text('Control your smart devices with ease.'),
+            SizedBox(height: 8),
+            Text('© 2024 Smart Home Inc.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to welcome screen
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRouter.welcome,
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
       ),
     );
   }

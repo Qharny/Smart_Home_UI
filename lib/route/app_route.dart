@@ -3,6 +3,7 @@ import 'package:smart_home/screens/devices_screen.dart';
 
 import '../screens/light_control_screen.dart';
 import '../screens/main_screen.dart';
+import '../screens/notification_screen.dart';
 import '../screens/otp.dart';
 import '../screens/splash.dart';
 import '../screens/welcome_screen.dart';
@@ -19,6 +20,7 @@ class AppRouter {
   static const String lightControl = '/light-control';
   static const String deviceControl = '/device-control';
   static const String settings = '/settings';
+  static const String notifications = '/notifications';
 
   static Route<dynamic> generateRoute(RouteSettings routeSettings) {
     switch (routeSettings.name) {
@@ -49,6 +51,8 @@ class AppRouter {
             imagePath: args?['imagePath'] ?? 'asset/images/light_bulb.png',
           ),
         );
+      case notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
