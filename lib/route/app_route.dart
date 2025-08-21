@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_home/screens/devices_screen.dart';
 
-import '../screens/light_control_screen.dart';
+import '../screens/control_screen.dart';
 import '../screens/main_screen.dart';
 import '../screens/notification_screen.dart';
 import '../screens/otp.dart';

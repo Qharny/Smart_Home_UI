@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           onViewControls: () async {
-                            Navigator.pushNamed(
+                            await Navigator.pushNamed(
                               context,
                               AppRouter.lightControl,
                               arguments: {
@@ -268,6 +268,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'imagePath': device.imagePath,
                               },
                             );
+
+                            // Refresh device states when returning from control screen
+                            await _refreshDeviceStates();
                           },
                         );
                       },
@@ -287,7 +290,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
         child: Column(
           children: [
             // Header with user info
@@ -319,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _userName,
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w400,
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.white
                           : Colors.black,
@@ -397,12 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Color? iconColor,
   }) {
     return ListTile(
-      // leading: Icon(
-      //   icon,
-      //   color:
-      //      Colors.black,
-      //   size: 24,
-      // ),
       title: Text(
         title,
         style: TextStyle(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../repositories/device_repository.dart';
+
 class LightControlScreen extends StatefulWidget {
   final String deviceName;
   final String deviceId;
@@ -25,6 +27,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
   late double _brightness;
   String _selectedRoom = 'Livingroom';
   final List<String> _rooms = ['Livingroom', 'Bedroom', 'Kitchen', 'Bathroom'];
+  final DeviceRepository _deviceRepository = DeviceRepository();
 
   @override
   void initState() {
@@ -33,10 +36,32 @@ class _LightControlScreenState extends State<LightControlScreen> {
     _brightness = widget.brightness;
   }
 
-  void _togglePower() {
-    setState(() {
-      _isOn = !_isOn;
-    });
+  Future<void> _togglePower() async {
+    try {
+      final newState = !_isOn;
+      setState(() {
+        _isOn = newState;
+      });
+
+      // Update device state in repository
+      await _deviceRepository.updateDeviceState(widget.deviceId, newState);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Device ${_isOn ? 'turned on' : 'turned off'}'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      // Revert state if update failed
+      setState(() {
+        _isOn = !_isOn;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to update device: $e')));
+    }
   }
 
   void _updateBrightness(double value) {
@@ -79,131 +104,117 @@ class _LightControlScreenState extends State<LightControlScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new,
+                        Icons.arrow_back,
                         size: 20,
                         color: Colors.black,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20),
+                ],
+              ),
 
-                  // Title
+              const SizedBox(height: 10),
+              // Title
+              Text(
+                widget.deviceName,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Toggle and Room Selection
+              Row(
+                // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: _togglePower,
+                    child: Container(
+                      width: 50,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: _isOn ? Colors.black : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Stack(
+                        children: [
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 200),
+                            left: _isOn ? 22 : 2,
+                            top: 2,
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
                   const Text(
-                    'Light bulb',
+                    'On',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 15),
 
-              const SizedBox(height: 30),
-
-              // Toggle and Room Selection
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Toggle Switch
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'On',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: _togglePower,
-                        child: Container(
-                          width: 50,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: _isOn ? Colors.black : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Stack(
-                            children: [
-                              AnimatedPositioned(
-                                duration: const Duration(milliseconds: 200),
-                                left: _isOn ? 22 : 2,
-                                top: 2,
-                                child: Container(
-                                  width: 26,
-                                  height: 26,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black12,
-                                        blurRadius: 4,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+              // Room Dropdown
+              Container(
+                height: 30,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: Colors.black.withOpacity(0.5),
+                    width: 1,
                   ),
-
-                  // Room Dropdown
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedRoom,
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                        ),
-                        items: _rooms.map((String room) {
-                          return DropdownMenuItem<String>(
-                            value: room,
-                            child: Text(room),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedRoom = newValue;
-                            });
-                          }
-                        },
-                      ),
-                    ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedRoom,
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                    items: _rooms.map((String room) {
+                      return DropdownMenuItem<String>(
+                        value: room,
+                        child: Text(room),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedRoom = newValue;
+                        });
+                      }
+                    },
                   ),
-                ],
+                ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
               // Middle Section - Brightness Control and Light Bulb
               Expanded(
@@ -239,7 +250,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
 
                           // Vertical Slider
                           Expanded(
@@ -268,7 +279,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
 
                           // Decrease button
                           GestureDetector(
@@ -320,12 +331,30 @@ class _LightControlScreenState extends State<LightControlScreen> {
                                     height: 180,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.orange.withOpacity(0.3),
+                                      // color: Colors.orange.withOpacity(0.3),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.orange.withOpacity(0.5),
+                                          color: Colors.orange.withOpacity(0.6),
                                           blurRadius: 30,
-                                          spreadRadius: 10,
+                                          spreadRadius: 20,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                // Dark overlay when device is off
+                                if (!_isOn)
+                                  Container(
+                                    width: 140,
+                                    height: 180,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black.withOpacity(0.1),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 15,
+                                          spreadRadius: 5,
                                         ),
                                       ],
                                     ),
@@ -333,19 +362,8 @@ class _LightControlScreenState extends State<LightControlScreen> {
 
                                 // Device image
                                 Container(
-                                  width: 100,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
+                                  width: 600,
+                                  height: 600,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.asset(
