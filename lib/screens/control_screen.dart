@@ -349,7 +349,7 @@ class _LightControlScreenState extends State<LightControlScreen> {
                                     height: 180,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.black.withOpacity(0.1),
+                                      // color: Colors.black.withOpacity(0.1),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.2),
@@ -361,21 +361,28 @@ class _LightControlScreenState extends State<LightControlScreen> {
                                   ),
 
                                 // Device image
-                                Container(
-                                  width: 600,
-                                  height: 600,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.asset(
-                                      widget.imagePath,
-                                      fit: BoxFit.cover,
-                                      color: _isOn ? null : Colors.grey[400],
-                                      colorBlendMode: _isOn
-                                          ? null
-                                          : BlendMode.saturation,
-                                    ),
-                                  ),
-                                ),
+                                _isOn
+                                    ? Container(
+                                        width: 600,
+                                        height: 600,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Image.asset(
+                                            widget.imagePath,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        widget.imagePath,
+                                        width: 600,
+                                        height: 600,
+                                        fit: BoxFit.cover,
+                                        // color: Colors.grey[400],
+                                        colorBlendMode: BlendMode.saturation,
+                                      ),
                               ],
                             ),
                           ),
