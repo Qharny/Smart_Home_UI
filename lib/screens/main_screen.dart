@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:smart_home/screens/add_device_screen.dart';
 
-import '../route/app_route.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'devices_screen.dart';
 import 'home_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -14,7 +15,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [const HomeScreen(), const DevicesScreen()];
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const DevicesScreen(),
+    const AddDeviceScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -27,17 +32,6 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {
             _selectedIndex = index;
           });
-
-          // Handle navigation based on selected index
-          switch (index) {
-            case 2: // Add tab
-              Navigator.pushReplacementNamed(context, AppRouter.addDevice);
-              // Reset to home tab after navigation
-              setState(() {
-                _selectedIndex = 0;
-              });
-              break;
-          }
         },
       ),
     );
