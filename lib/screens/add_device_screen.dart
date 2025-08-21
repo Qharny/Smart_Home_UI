@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'qr_scanner_screen.dart';
+
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
+import '../route/app_route.dart';
+import 'qr_scanner_screen.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   const AddDeviceScreen({super.key});
@@ -15,7 +17,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   final TextEditingController _assignedNameController = TextEditingController();
   final TextEditingController _zoneController = TextEditingController();
   final TextEditingController _protocolController = TextEditingController();
-  
+
   final DeviceRepository _deviceRepository = DeviceRepository();
   bool _isSubmitting = false;
 
@@ -50,22 +52,213 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     }
   }
 
-  void _submitDevice() {
-    // Validate and submit device data
-    if (_uniqueIdController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter a Unique ID')));
+  void _submitDevice() async {
+    // Validate form data
+    if (!_validateDeviceData()) {
       return;
     }
 
-    // TODO: Implement device submission logic
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Device added successfully!')));
+    // Check if device with this ID already exists
+    final existingDevice = await _deviceRepository.getDevice(
+      _uniqueIdController.text.trim(),
+    );
+    if (existingDevice != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('A device with this Unique ID already exists'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-    // Navigate back
-    Navigator.pop(context);
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // Create new device
+      final newDevice = Device(
+        id: _uniqueIdController.text.trim(),
+        name: _assignedNameController.text.trim(),
+        imagePath: _getDeviceImagePath(_protocolController.text.trim()),
+        type: _getDeviceType(_protocolController.text.trim()),
+        isOn: false,
+        lastUpdated: DateTime.now(),
+        additionalProperties: {
+          'zone': _zoneController.text.trim(),
+          'protocol': _protocolController.text.trim(),
+        },
+      );
+
+      // Add device to repository
+      await _deviceRepository.addDevice(newDevice);
+
+      // Show success message with option to add another device
+      if (mounted) {
+        final shouldAddAnother = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Device Added Successfully!'),
+            content: Text(
+              'Device "${newDevice.name}" has been added to your smart home.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Done'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Add Another Device'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldAddAnother == true) {
+          // Clear form for adding another device
+          _clearForm();
+        } else {
+          // Navigate to devices screen
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRouter.devices,
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding device: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  String _getDeviceImagePath(String protocol) {
+    // Determine image path based on protocol or default to bulb
+    final protocolLower = protocol.toLowerCase();
+    if (protocolLower.contains('fan') || protocolLower.contains('air')) {
+      return 'asset/images/fan.png';
+    } else if (protocolLower.contains('light') ||
+        protocolLower.contains('bulb')) {
+      return 'asset/images/bulb.png';
+    } else {
+      return 'asset/images/bulb.png'; // Default image
+    }
+  }
+
+  String _getDeviceType(String protocol) {
+    // Determine device type based on protocol
+    final protocolLower = protocol.toLowerCase();
+    if (protocolLower.contains('fan') ||
+        protocolLower.contains('air') ||
+        protocolLower.contains('ac')) {
+      return 'fan';
+    } else if (protocolLower.contains('light') ||
+        protocolLower.contains('bulb') ||
+        protocolLower.contains('led')) {
+      return 'light';
+    } else if (protocolLower.contains('switch') ||
+        protocolLower.contains('outlet')) {
+      return 'switch';
+    } else if (protocolLower.contains('sensor') ||
+        protocolLower.contains('motion')) {
+      return 'sensor';
+    } else {
+      return 'device'; // Default type
+    }
+  }
+
+  // Helper method to validate device data
+  bool _validateDeviceData() {
+    if (_uniqueIdController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a Unique ID'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    if (_assignedNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a device name'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    // Validate Unique ID format (alphanumeric and underscore only)
+    final uniqueIdRegex = RegExp(r'^[a-zA-Z0-9_]+$');
+    if (!uniqueIdRegex.hasMatch(_uniqueIdController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unique ID can only contain letters, numbers, and underscores',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  // Helper method to clear form
+  void _clearForm() {
+    _uniqueIdController.clear();
+    _assignedNameController.clear();
+    _zoneController.clear();
+    _protocolController.clear();
+  }
+
+  // Handle back button press
+  Future<bool> _onWillPop() async {
+    // Check if there are unsaved changes
+    if (_uniqueIdController.text.isNotEmpty ||
+        _assignedNameController.text.isNotEmpty ||
+        _zoneController.text.isNotEmpty ||
+        _protocolController.text.isNotEmpty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Unsaved Changes'),
+          content: const Text(
+            'You have unsaved changes. Are you sure you want to leave?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Discard'),
+            ),
+          ],
+        ),
+      );
+
+      return shouldDiscard ?? false;
+    }
+
+    return true;
   }
 
   @override
@@ -236,7 +429,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _submitDevice,
+                      onPressed: _isSubmitting ? null : _submitDevice,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
@@ -245,13 +438,37 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isSubmitting
+                          ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Adding Device...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Text(
+                              'Submit',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                 ],
