@@ -455,7 +455,6 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     bool isSelected = false,
     Color? textColor,
-    Color? iconColor,
   }) {
     return ListTile(
       title: Text(
