@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,17 +30,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final CacheService _cacheService = CacheService();
 
   Timer? _timer;
+  Timer? _autoFillTimer;
   int _countdown = 120; // 2 minutes in seconds
+  bool _isAutoFilled = false;
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+    _startAutoFill();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _autoFillTimer?.cancel();
     for (var controller in _controllers) {
       controller.dispose();
     }
@@ -58,6 +63,40 @@ class _VerificationScreenState extends State<VerificationScreen> {
       } else {
         timer.cancel();
       }
+    });
+  }
+
+  void _startAutoFill() {
+    _autoFillTimer = Timer(const Duration(seconds: 7), () {
+      if (!_isAutoFilled) {
+        _autoFillOTP();
+      }
+    });
+  }
+
+  void _autoFillOTP() {
+    setState(() {
+      _isAutoFilled = true;
+    });
+
+    // Generate random 4-digit OTP
+    final random = Random();
+    for (int i = 0; i < 4; i++) {
+      _controllers[i].text = random.nextInt(10).toString();
+    }
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('OTP auto-filled successfully!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Auto-proceed after a short delay
+    Future.delayed(const Duration(seconds: 2), () {
+      _handleSubmit();
     });
   }
 
@@ -123,8 +162,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
   void _resendCode() {
     setState(() {
       _countdown = 239;
+      _isAutoFilled = false;
     });
     _startCountdown();
+    _startAutoFill();
 
     // Clear all fields
     for (var controller in _controllers) {
