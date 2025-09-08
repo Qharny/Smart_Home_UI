@@ -187,14 +187,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     horizontal: 12,
                                     vertical: 6,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
+                                  // decoration: BoxDecoration(
+                                  //   color: Colors.white.withOpacity(0.15),
+                                  //   borderRadius: BorderRadius.circular(8),
+                                  //   border: Border.all(
+                                  //     color: Colors.white.withOpacity(0.2),
+                                  //     width: 1,
+                                  //   ),
+                                  // ),
                                   child: Text(
                                     'Hi $_userName,',
                                     style: const TextStyle(
@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.black.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
+                                    // borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     'Welcome to your Smart Home',
