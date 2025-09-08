@@ -1,0 +1,158 @@
+name: Android Release (Advanced)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+        - release
+        - debug
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Verify Flutter installation
+      run: flutter doctor -v
+      
+    - name: Run Flutter tests
+      run: flutter test --coverage
+      
+    - name: Generate code coverage report
+      run: |
+        if [ -f coverage/lcov.info ]; then
+          echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage report generated successfully!" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Analyze code
+      run: flutter analyze
+      
+    - name: Build APK
+      run: flutter build apk --release --split-per-abi
+      
+    - name: Build App Bundle (AAB)
+      run: flutter build appbundle --release
+      
+    - name: Get APK file sizes
+      run: |
+        echo "## 📦 APK File Sizes" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        for apk in build/app/outputs/flutter-apk/*.apk; do
+          if [ -f "$apk" ]; then
+            size=$(du -h "$apk" | cut -f1)
+            filename=$(basename "$apk")
+            echo "- **$filename**: $size" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        
+    - name: Upload APK (Universal)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-release.apk
+        asset_name: smart-home-${{ github.event.release.tag_name }}-universal.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload APK (ARM64)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+        asset_name: smart-home-${{ github.event.release.tag_name }}-arm64.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload APK (ARM32)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+        asset_name: smart-home-${{ github.event.release.tag_name }}-arm32.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload APK (x86_64)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-x86_64-release.apk
+        asset_name: smart-home-${{ github.event.release.tag_name }}-x86_64.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload App Bundle to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/bundle/release/app-release.aab
+        asset_name: smart-home-${{ github.event.release.tag_name }}.aab
+        asset_content_type: application/octet-stream
+        
+    - name: Create release summary
+      run: |
+        echo "## 📱 Smart Home Android Release v${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🚀 Release Assets" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**APK Files:**" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **Universal APK**: smart-home-${{ github.event.release.tag_name }}-universal.apk" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **ARM64 APK**: smart-home-${{ github.event.release.tag_name }}-arm64.apk" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **ARM32 APK**: smart-home-${{ github.event.release.tag_name }}-arm32.apk" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **x86_64 APK**: smart-home-${{ github.event.release.tag_name }}-x86_64.apk" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**App Bundle:**" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **AAB**: smart-home-${{ github.event.release.tag_name }}.aab" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Installation Guide" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**For End Users:**" >> $GITHUB_STEP_SUMMARY
+        echo "1. Download the Universal APK for most devices" >> $GITHUB_STEP_SUMMARY
+        echo "2. Enable 'Install from Unknown Sources' in Android settings" >> $GITHUB_STEP_SUMMARY
+        echo "3. Install the APK file" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**For Developers:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Use the App Bundle (AAB) for Google Play Store submission" >> $GITHUB_STEP_SUMMARY
+        echo "- Use architecture-specific APKs for testing on specific devices" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔧 Build Information" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Flutter Version**: 3.24.0" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Type**: Release" >> $GITHUB_STEP_SUMMARY
+        echo "- **Target Platform**: Android" >> $GITHUB_STEP_SUMMARY
+        echo "- **Java Version**: 17" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

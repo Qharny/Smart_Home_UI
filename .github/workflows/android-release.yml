@@ -1,0 +1,81 @@
+name: Android Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Verify Flutter installation
+      run: flutter doctor
+      
+    - name: Run Flutter tests
+      run: flutter test
+      
+    - name: Build APK
+      run: flutter build apk --release
+      
+    - name: Build App Bundle (AAB)
+      run: flutter build appbundle --release
+      
+    - name: Upload APK to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-release.apk
+        asset_name: smart-home-${{ github.event.release.tag_name }}.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload App Bundle to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/bundle/release/app-release.aab
+        asset_name: smart-home-${{ github.event.release.tag_name }}.aab
+        asset_content_type: application/octet-stream
+        
+    - name: Create APK download summary
+      run: |
+        echo "## 📱 Android Release Assets" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🚀 Smart Home App v${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Release Assets:**" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **APK**: smart-home-${{ github.event.release.tag_name }}.apk" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **App Bundle**: smart-home-${{ github.event.release.tag_name }}.aab" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Installation:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Download the APK file for direct installation" >> $GITHUB_STEP_SUMMARY
+        echo "- Use the App Bundle (AAB) for Google Play Store submission" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Build Info:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Flutter Version: 3.24.0" >> $GITHUB_STEP_SUMMARY
+        echo "- Build Type: Release" >> $GITHUB_STEP_SUMMARY
+        echo "- Target Platform: Android" >> $GITHUB_STEP_SUMMARY

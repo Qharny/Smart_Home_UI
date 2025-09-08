@@ -1,0 +1,34 @@
+🚀 Smart Home App - New Features & Improvements
+
+✨ What's New:
+- Added comprehensive automation system for smart devices
+- Schedule devices to turn on/off at specific times
+- Set brightness and speed levels automatically
+- Support for daily and custom day scheduling
+- Beautiful automation management interface
+
+🔧 Improvements:
+- Enhanced device control interface
+- Better user experience with scrollable content
+- Improved error handling and user feedback
+- Optimized app performance
+
+🐛 Bug Fixes:
+- Fixed overflow issues on control screen
+- Improved automation execution reliability
+- Better state management for device controls
+
+📱 Technical Updates:
+- Updated to Flutter 3.24.0
+- Enhanced automation service with background execution
+- Improved data persistence and caching
+- Better code organization and maintainability
+
+🎯 How to Use:
+1. Navigate to any device control screen
+2. Scroll down to the Automation section
+3. Tap "Add +" to create new automations
+4. Set time, action, and repeat schedule
+5. Enable/disable automations as needed
+
+Thank you for using Smart Home! 🏠✨
