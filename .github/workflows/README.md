@@ -1,116 +1,152 @@
-# iOS Build & Deploy Workflow
+# GitHub Workflows for Smart Home App
 
-This GitHub workflow automates the building, testing, and deployment of your Flutter iOS app.
+This directory contains GitHub Actions workflows for building and releasing the Smart Home Flutter app.
 
-## Workflow Overview
+## 📁 Workflow Files
 
-The workflow consists of several jobs that run based on different triggers:
+### 1. `android-release.yml` - Basic Android Release
+- **Trigger**: When a new release is published
+- **Purpose**: Builds and uploads APK and AAB files to GitHub releases
+- **Outputs**: 
+  - Universal APK
+  - App Bundle (AAB)
 
-### Triggers
-- **Push to main/develop branches**: Runs tests and builds
-- **Pull Requests**: Runs tests and builds for simulator
-- **Release published**: Full build, code signing, and TestFlight deployment
+### 2. `android-release-advanced.yml` - Advanced Android Release
+- **Trigger**: When a new release is published or manually triggered
+- **Purpose**: Builds multiple APK variants and provides detailed build information
+- **Outputs**:
+  - Universal APK
+  - ARM64 APK
+  - ARM32 APK
+  - x86_64 APK
+  - App Bundle (AAB)
+- **Features**:
+  - Code coverage reports
+  - File size analysis
+  - Detailed build summaries
 
-### Jobs
+### 3. `google-play-deploy.yml` - Google Play Store Deployment
+- **Trigger**: When a new release is published or manually triggered
+- **Purpose**: Automatically deploys to Google Play Store
+- **Features**:
+  - Multiple release tracks (internal, alpha, beta, production)
+  - Automatic release notes integration
+  - Play Store status updates
 
-1. **Test**: Runs Flutter tests and code analysis
-2. **Build iOS**: Creates release build for iOS devices
-3. **Build iOS Simulator**: Creates debug build for iOS simulator (PRs only)
-4. **Code Sign iOS**: Signs the app for App Store distribution
-5. **Deploy TestFlight**: Uploads to TestFlight for testing
-6. **Notify**: Provides build status notifications
+## 🚀 How to Use
 
-## Setup Instructions
+### Creating a Release
 
-### 1. Required GitHub Secrets
+1. **Create a new release on GitHub:**
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
 
-Add these secrets to your GitHub repository (Settings > Secrets and variables > Actions):
+2. **Go to GitHub Releases page:**
+   - Navigate to your repository
+   - Click on "Releases"
+   - Click "Create a new release"
+   - Choose the tag you created
+   - Add release notes
+   - Click "Publish release"
 
-#### For Code Signing:
-- `IOS_P12_BASE64`: Base64 encoded P12 certificate file
-- `IOS_P12_PASSWORD`: Password for the P12 certificate
+3. **Workflows will automatically trigger:**
+   - `android-release.yml` will build and upload APK/AAB files
+   - `android-release-advanced.yml` will create multiple APK variants
+   - `google-play-deploy.yml` will deploy to Google Play Store (if configured)
 
-#### For App Store Connect:
-- `APPSTORE_ISSUER_ID`: Your App Store Connect Issuer ID
-- `APPSTORE_KEY_ID`: Your App Store Connect API Key ID
-- `APPSTORE_PRIVATE_KEY`: Your App Store Connect API Private Key
-- `APPSTORE_CONNECT_USERNAME`: Your App Store Connect username
-- `APPSTORE_CONNECT_APP_SPECIFIC_PASSWORD`: App-specific password for App Store Connect
+### Manual Workflow Trigger
 
-### 2. Bundle Identifier
+You can also trigger workflows manually:
 
-Update the bundle identifier in the workflow file:
+1. Go to the "Actions" tab in your repository
+2. Select the workflow you want to run
+3. Click "Run workflow"
+4. Choose the branch and any required inputs
+5. Click "Run workflow"
+
+## 🔧 Configuration
+
+### Required Secrets
+
+For Google Play Store deployment, you need to set up these secrets:
+
+1. **`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`**:
+   - Create a service account in Google Cloud Console
+   - Download the JSON key file
+   - Add the entire JSON content as a repository secret
+
+### Package Name
+
+Update the package name in `google-play-deploy.yml`:
 ```yaml
-bundle-id: 'com.example.smartHome'  # Change to your actual bundle ID
+packageName: com.example.smart_home  # Change this to your actual package name
 ```
 
-### 3. Flutter Version
+### Release Notes
 
-The workflow uses Flutter version 3.24.5. Update the `FLUTTER_VERSION` environment variable if needed.
+Update release notes in `release-notes/en-US.txt` for each release.
 
-## How to Get Required Credentials
+## 📱 Build Outputs
 
-### App Store Connect API Key
-1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. Navigate to Users and Access > Keys
-3. Create a new API key with App Manager role
-4. Download the key and note the Key ID and Issuer ID
+### APK Files
+- **Universal APK**: Works on all Android devices
+- **ARM64 APK**: Optimized for 64-bit ARM devices
+- **ARM32 APK**: Optimized for 32-bit ARM devices
+- **x86_64 APK**: Optimized for x86_64 devices (emulators, some tablets)
 
-### P12 Certificate
-1. Open Keychain Access on macOS
-2. Export your iOS Distribution certificate as P12
-3. Convert to base64: `base64 -i certificate.p12 | pbcopy`
+### App Bundle (AAB)
+- **Google Play Store**: Use this for Play Store submissions
+- **Smaller size**: Google Play generates optimized APKs for each device
 
-### App-Specific Password
-1. Go to [Apple ID](https://appleid.apple.com)
-2. Security > App-Specific Passwords
-3. Generate a new password for App Store Connect
+## 🔍 Monitoring
 
-## Usage
+### Build Status
+- Check the "Actions" tab to monitor workflow progress
+- View build logs for debugging
+- Check release assets in the "Releases" section
 
-### For Development
-- Push to `develop` branch to trigger tests and builds
-- Create pull requests to test simulator builds
+### Build Summaries
+- Each workflow generates a detailed summary
+- Includes file sizes, build information, and next steps
+- Available in the workflow run details
 
-### For Production
-- Push to `main` branch to trigger full build pipeline
-- Create a GitHub release to deploy to TestFlight
-
-## Customization
-
-### Branch Names
-Update the branch names in the workflow triggers:
-```yaml
-branches: [ main, develop ]  # Add your branch names
-```
-
-### Build Configuration
-Modify build flags in the workflow:
-```yaml
-flutter build ios --release --no-codesign  # For unsigned builds
-flutter build ios --release  # For signed builds
-```
-
-### Notification
-Customize the notification step to integrate with your preferred notification system (Slack, Discord, etc.).
-
-## Troubleshooting
+## 🛠️ Troubleshooting
 
 ### Common Issues
 
-1. **Pod install fails**: Ensure your iOS dependencies are properly configured
-2. **Code signing errors**: Verify your certificates and provisioning profiles
-3. **TestFlight upload fails**: Check your App Store Connect credentials
+1. **Flutter version mismatch**:
+   - Update the Flutter version in workflow files
+   - Ensure local Flutter version matches
 
-### Debug Mode
-To run the workflow in debug mode, you can temporarily modify the conditions:
-```yaml
-if: true  # Remove conditions for testing
-```
+2. **Build failures**:
+   - Check Flutter doctor output in workflow logs
+   - Verify all dependencies are properly configured
 
-## Security Notes
+3. **Google Play deployment issues**:
+   - Verify service account JSON is correct
+   - Check package name matches Play Console
+   - Ensure app is properly configured in Play Console
 
-- Never commit sensitive credentials to your repository
-- Use GitHub Secrets for all sensitive information
-- Regularly rotate your App Store Connect API keys
-- Use app-specific passwords instead of your main Apple ID password 
+### Debug Steps
+
+1. Check workflow logs in the Actions tab
+2. Verify all required secrets are set
+3. Test builds locally before pushing
+4. Check Flutter doctor output
+
+## 📚 Additional Resources
+
+- [Flutter CI/CD Documentation](https://docs.flutter.dev/deployment/ci)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Google Play Console API](https://developers.google.com/android-publisher)
+
+## 🤝 Contributing
+
+When adding new workflows or modifying existing ones:
+
+1. Test workflows thoroughly
+2. Update this README with changes
+3. Ensure proper error handling
+4. Add appropriate documentation

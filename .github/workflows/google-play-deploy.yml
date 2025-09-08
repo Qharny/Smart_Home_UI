@@ -1,0 +1,80 @@
+name: Deploy to Google Play Store
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Release track'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+        - internal
+        - alpha
+        - beta
+        - production
+
+jobs:
+  deploy-to-play-store:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Run Flutter tests
+      run: flutter test
+      
+    - name: Build App Bundle for Play Store
+      run: flutter build appbundle --release
+      
+    - name: Setup Google Play Console
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        packageName: com.example.smart_home
+        releaseFiles: build/app/outputs/bundle/release/app-release.aab
+        track: ${{ github.event.inputs.track || 'internal' }}
+        status: completed
+        inAppUpdatePriority: 2
+        whatsNewDirectory: ./release-notes/
+        
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 Google Play Store Deployment" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Smart Home App v${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployment Details:**" >> $GITHUB_STEP_SUMMARY
+        echo "- **Track**: ${{ github.event.inputs.track || 'internal' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: com.example.smart_home" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+        echo "1. Review the release in Google Play Console" >> $GITHUB_STEP_SUMMARY
+        echo "2. Add release notes if needed" >> $GITHUB_STEP_SUMMARY
+        echo "3. Promote to higher tracks when ready" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Build Info:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Flutter Version: 3.24.0" >> $GITHUB_STEP_SUMMARY
+        echo "- Build Type: Release" >> $GITHUB_STEP_SUMMARY
+        echo "- Deployment Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
