@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../models/automation.dart';
 import '../models/device.dart';
 import '../services/cache_service.dart';
 
@@ -7,6 +8,7 @@ class DeviceRepository {
   final CacheService _cacheService = CacheService();
 
   static const String _devicesKey = 'devices_list';
+  static const String _automationsKey = 'automations_list';
 
   // Get all devices
   Future<List<Device>> getAllDevices() async {
@@ -257,5 +259,128 @@ class DeviceRepository {
       'poweredOffDevices': poweredOffDevices,
       'devicesByType': devicesByType,
     };
+  }
+
+  // ========== AUTOMATION METHODS ==========
+
+  // Get all automations
+  Future<List<Automation>> getAllAutomations() async {
+    final automationsJson = _cacheService.getData<String>(_automationsKey);
+    if (automationsJson != null) {
+      final List<dynamic> automationsList = jsonDecode(automationsJson);
+      return automationsList.map((json) => Automation.fromMap(json)).toList();
+    }
+    return [];
+  }
+
+  // Save all automations
+  Future<void> saveAllAutomations(List<Automation> automations) async {
+    final automationsJson = jsonEncode(
+      automations.map((automation) => automation.toMap()).toList(),
+    );
+    await _cacheService.saveData(_automationsKey, automationsJson);
+  }
+
+  // Get automations for a specific device
+  Future<List<Automation>> getAutomationsForDevice(String deviceId) async {
+    final automations = await getAllAutomations();
+    return automations
+        .where((automation) => automation.deviceId == deviceId)
+        .toList();
+  }
+
+  // Add new automation
+  Future<void> addAutomation(Automation automation) async {
+    final automations = await getAllAutomations();
+    automations.add(automation);
+    await saveAllAutomations(automations);
+  }
+
+  // Update automation
+  Future<void> updateAutomation(Automation automation) async {
+    final automations = await getAllAutomations();
+    final index = automations.indexWhere((a) => a.id == automation.id);
+    if (index != -1) {
+      automations[index] = automation;
+      await saveAllAutomations(automations);
+    }
+  }
+
+  // Delete automation
+  Future<void> deleteAutomation(String automationId) async {
+    final automations = await getAllAutomations();
+    automations.removeWhere((automation) => automation.id == automationId);
+    await saveAllAutomations(automations);
+  }
+
+  // Toggle automation enabled state
+  Future<void> toggleAutomation(String automationId) async {
+    final automations = await getAllAutomations();
+    final index = automations.indexWhere((a) => a.id == automationId);
+    if (index != -1) {
+      automations[index] = automations[index].copyWith(
+        isEnabled: !automations[index].isEnabled,
+      );
+      await saveAllAutomations(automations);
+    }
+  }
+
+  // Execute automation
+  Future<void> executeAutomation(Automation automation) async {
+    try {
+      switch (automation.action) {
+        case 'on':
+          await updateDeviceState(automation.deviceId, true);
+          break;
+        case 'off':
+          await updateDeviceState(automation.deviceId, false);
+          break;
+        case 'brightness':
+          if (automation.value != null) {
+            await updateDeviceBrightness(
+              automation.deviceId,
+              automation.value!,
+            );
+          }
+          break;
+        case 'speed':
+          if (automation.value != null) {
+            await updateDeviceSpeed(automation.deviceId, automation.value!);
+          }
+          break;
+      }
+
+      // Update last executed time
+      final updatedAutomation = automation.copyWith(
+        lastExecuted: DateTime.now(),
+      );
+      await updateAutomation(updatedAutomation);
+
+      print(
+        'Automation executed: ${automation.deviceName} - ${automation.actionDisplayText}',
+      );
+    } catch (e) {
+      print('Failed to execute automation: $e');
+    }
+  }
+
+  // Check and execute pending automations
+  Future<void> checkAndExecuteAutomations() async {
+    final automations = await getAllAutomations();
+    final now = DateTime.now();
+
+    for (final automation in automations) {
+      if (automation.isEnabled &&
+          automation.isTimeToExecute() &&
+          (automation.lastExecuted == null ||
+              now.difference(automation.lastExecuted!).inMinutes > 1)) {
+        await executeAutomation(automation);
+      }
+    }
+  }
+
+  // Clear all automations
+  Future<void> clearAllAutomations() async {
+    await _cacheService.removeData(_automationsKey);
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/automation.dart';
 import '../repositories/device_repository.dart';
+import '../services/automation_service.dart';
+import '../widgets/add_automation_dialog.dart';
 
 class DeviceControlScreen extends StatefulWidget {
   final String deviceName;
@@ -33,6 +36,8 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
   String _selectedRoom = 'Livingroom';
   final List<String> _rooms = ['Livingroom', 'Bedroom', 'Kitchen', 'Bathroom'];
   final DeviceRepository _deviceRepository = DeviceRepository();
+  final AutomationService _automationService = AutomationService();
+  List<Automation> _automations = [];
 
   @override
   void initState() {
@@ -40,6 +45,16 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
     _isOn = widget.isOn;
     _brightness = widget.brightness;
     _speed = widget.speed;
+    _loadAutomations();
+  }
+
+  Future<void> _loadAutomations() async {
+    final automations = await _deviceRepository.getAutomationsForDevice(
+      widget.deviceId,
+    );
+    setState(() {
+      _automations = automations;
+    });
   }
 
   Future<void> _togglePower() async {
@@ -117,12 +132,63 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
   String get _valueLabel =>
       widget.deviceType == 'light' ? 'Brightness' : 'Speed';
 
+  Future<void> _addAutomation(Automation automation) async {
+    await _deviceRepository.addAutomation(automation);
+    await _loadAutomations();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Automation added for ${automation.formattedTime}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _deleteAutomation(String automationId) async {
+    await _deviceRepository.deleteAutomation(automationId);
+    await _loadAutomations();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Automation deleted'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  Future<void> _toggleAutomation(String automationId) async {
+    await _deviceRepository.toggleAutomation(automationId);
+    await _loadAutomations();
+  }
+
+  void _showAddAutomationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddAutomationDialog(
+        deviceId: widget.deviceId,
+        deviceName: widget.deviceName,
+        deviceType: widget.deviceType,
+        onAdd: _addAutomation,
+      ),
+    );
+  }
+
+  Future<void> _testAutomations() async {
+    await _automationService.checkAutomationsNow();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Automation check completed'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +318,8 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
               const SizedBox(height: 30),
 
               // Middle Section - Brightness Control and Light Bulb
-              Expanded(
+              SizedBox(
+                height: 400, // Fixed height instead of Expanded
                 child: Row(
                   children: [
                     // Left Side - Brightness Slider
@@ -484,30 +551,63 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Add automation logic
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[100],
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.grey[300]!),
+                        Row(
+                          children: [
+                            // Test button (only show if there are automations)
+                            if (_automations.isNotEmpty)
+                              Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: ElevatedButton(
+                                  onPressed: _testAutomations,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[50],
+                                    foregroundColor: Colors.blue[700],
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      side: BorderSide(
+                                        color: Colors.blue[200]!,
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Test',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // Add button
+                            ElevatedButton(
+                              onPressed: _showAddAutomationDialog,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey[100],
+                                foregroundColor: Colors.black,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: BorderSide(color: Colors.grey[300]!),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                              ),
+                              child: const Text(
+                                'Add +',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          child: const Text(
-                            'Add +',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -529,9 +629,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                           ),
                         ),
                         Expanded(
-                          flex: 1,
+                          flex: 2,
                           child: Text(
-                            'Status',
+                            'Action',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -545,71 +645,158 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Automation entry
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              '2pm',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
+                    // Automation entries
+                    if (_automations.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No automations yet',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tap "Add +" to create your first automation',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ..._automations
+                          .map(
+                            (automation) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: automation.isEnabled
+                                            ? Colors.grey[100]
+                                            : Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: automation.isEnabled
+                                              ? Colors.grey[300]!
+                                              : Colors.grey[200]!,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        automation.formattedTime,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: automation.isEnabled
+                                              ? Colors.black87
+                                              : Colors.grey[500],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: automation.isEnabled
+                                            ? Colors.grey[100]
+                                            : Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: automation.isEnabled
+                                              ? Colors.grey[300]!
+                                              : Colors.grey[200]!,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        automation.actionDisplayText,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: automation.isEnabled
+                                              ? Colors.black87
+                                              : Colors.grey[500],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Row(
+                                    children: [
+                                      // Toggle button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _toggleAutomation(automation.id),
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            color: automation.isEnabled
+                                                ? Colors.green[50]
+                                                : Colors.grey[100],
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            automation.isEnabled
+                                                ? Icons.check
+                                                : Icons.close,
+                                            size: 16,
+                                            color: automation.isEnabled
+                                                ? Colors.green[600]
+                                                : Colors.grey[500],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Delete button
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _deleteAutomation(automation.id),
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red[50],
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.remove,
+                                            size: 16,
+                                            color: Colors.red[400],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'Off',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onTap: () {
-                            // Delete automation logic
-                          },
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.remove,
-                              size: 16,
-                              color: Colors.red[400],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                          )
+                          .toList(),
                   ],
                 ),
               ),
