@@ -9,7 +9,7 @@ on:
     types: [ published ]
 
 env:
-  FLUTTER_VERSION: "3.24.5"
+  FLUTTER_VERSION: "3.27.0"
 
 jobs:
   test:

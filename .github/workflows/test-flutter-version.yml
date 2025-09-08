@@ -1,0 +1,48 @@
+name: Test Flutter Version Compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-flutter-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.27.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Verify Flutter and Dart versions
+      run: |
+        echo "## Flutter Version Information" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        flutter --version >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Dart Version Check" >> $GITHUB_STEP_SUMMARY
+        dart --version >> $GITHUB_STEP_SUMMARY
+        
+    - name: Test pub get
+      run: flutter pub get
+      
+    - name: Verify dependencies
+      run: |
+        echo "## Dependencies Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All dependencies resolved successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Package count:**" >> $GITHUB_STEP_SUMMARY
+        flutter pub deps --json | jq '.packages | length' >> $GITHUB_STEP_SUMMARY

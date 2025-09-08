@@ -22,7 +22,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.0'
+        flutter-version: '3.27.0'
         channel: 'stable'
         cache: true
         
@@ -76,6 +76,6 @@ jobs:
         echo "- Use the App Bundle (AAB) for Google Play Store submission" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Build Info:**" >> $GITHUB_STEP_SUMMARY
-        echo "- Flutter Version: 3.24.0" >> $GITHUB_STEP_SUMMARY
+        echo "- Flutter Version: 3.27.0" >> $GITHUB_STEP_SUMMARY
         echo "- Build Type: Release" >> $GITHUB_STEP_SUMMARY
         echo "- Target Platform: Android" >> $GITHUB_STEP_SUMMARY
