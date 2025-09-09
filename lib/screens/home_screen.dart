@@ -325,8 +325,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               arguments: {
                                 'deviceName': device.name,
                                 'deviceId': device.id,
+                                'deviceType': device.type,
                                 'isOn': device.isOn,
-                                'brightness': 47.0, // Default brightness
+                                'brightness': device.brightness,
+                                'speed': device.speed,
                                 'imagePath': device.imagePath,
                               },
                             );
