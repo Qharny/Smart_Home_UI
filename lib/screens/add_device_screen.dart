@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/device.dart';
 import '../repositories/device_repository.dart';
-import '../route/app_route.dart';
 import 'qr_scanner_screen.dart';
 
 class AddDeviceScreen extends StatefulWidget {
@@ -139,11 +138,12 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           // Clear form for adding another device
           _clearForm();
         } else {
-          // Navigate to devices screen
+          // Navigate back to main screen with devices tab selected
           Navigator.pushNamedAndRemoveUntil(
             context,
-            AppRouter.devices,
+            '/home',
             (route) => false,
+            arguments: {'initialIndex': 1}, // Switch to devices tab
           );
         }
       }
@@ -182,7 +182,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     } else if (nameLower.contains('ac') ||
         nameLower.contains('air conditioner')) {
       return 'asset/images/ac.jpg';
-    } else if (nameLower.contains('washing') || nameLower.contains('washer')) {
+    } else if (nameLower.contains('washing') || nameLower.contains('washer') || nameLower.contains('washing machine')) {
       return 'asset/images/washing_machine.jpg';
     } else if (nameLower.contains('microwave') || nameLower.contains('oven')) {
       return 'asset/images/microwave.jpg';

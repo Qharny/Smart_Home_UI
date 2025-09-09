@@ -33,6 +33,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
   late bool _isOn;
   late double _brightness;
   late double _speed;
+  late double _temperature; // For AC, fridge, heater
+  late String _mode; // For AC, washing machine
+  late int _timer; // For various devices
   String _selectedRoom = 'Livingroom';
   final List<String> _rooms = ['Livingroom', 'Bedroom', 'Kitchen', 'Bathroom'];
   final DeviceRepository _deviceRepository = DeviceRepository();
@@ -45,6 +48,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
     _isOn = widget.isOn;
     _brightness = widget.brightness;
     _speed = widget.speed;
+    _temperature = 22.0; // Default temperature
+    _mode = 'auto'; // Default mode
+    _timer = 0; // Default timer
     _loadAutomations();
   }
 
@@ -99,17 +105,43 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
     _deviceRepository.updateDeviceSpeed(widget.deviceId, value);
   }
 
+  void _updateTemperature(double value) {
+    setState(() {
+      _temperature = value;
+    });
+    // You can add temperature update to device repository if needed
+  }
+
+  void _updateMode(String mode) {
+    setState(() {
+      _mode = mode;
+    });
+    // You can add mode update to device repository if needed
+  }
+
+  void _updateTimer(int minutes) {
+    setState(() {
+      _timer = minutes;
+    });
+    // You can add timer update to device repository if needed
+  }
+
   void _increaseValue() {
     if (widget.deviceType == 'light') {
       setState(() {
         _brightness = (_brightness + 5).clamp(0.0, 100.0);
       });
       _deviceRepository.updateDeviceBrightness(widget.deviceId, _brightness);
-    } else if (widget.deviceType == 'fan') {
+    } else if (widget.deviceType == 'fan' || widget.deviceType == 'ac') {
       setState(() {
         _speed = (_speed + 5).clamp(0.0, 100.0);
       });
       _deviceRepository.updateDeviceSpeed(widget.deviceId, _speed);
+    } else if (widget.deviceType == 'fridge' || widget.deviceType == 'heater') {
+      setState(() {
+        _temperature = (_temperature + 1).clamp(16.0, 30.0);
+      });
+      _updateTemperature(_temperature);
     }
   }
 
@@ -119,18 +151,193 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
         _brightness = (_brightness - 5).clamp(0.0, 100.0);
       });
       _deviceRepository.updateDeviceBrightness(widget.deviceId, _brightness);
-    } else if (widget.deviceType == 'fan') {
+    } else if (widget.deviceType == 'fan' || widget.deviceType == 'ac') {
       setState(() {
         _speed = (_speed - 5).clamp(0.0, 100.0);
       });
       _deviceRepository.updateDeviceSpeed(widget.deviceId, _speed);
+    } else if (widget.deviceType == 'fridge' || widget.deviceType == 'heater') {
+      setState(() {
+        _temperature = (_temperature - 1).clamp(16.0, 30.0);
+      });
+      _updateTemperature(_temperature);
     }
   }
 
-  double get _currentValue =>
-      widget.deviceType == 'light' ? _brightness : _speed;
-  String get _valueLabel =>
-      widget.deviceType == 'light' ? 'Brightness' : 'Speed';
+  double get _currentValue {
+    switch (widget.deviceType) {
+      case 'light':
+        return _brightness;
+      case 'fan':
+      case 'ac':
+        return _speed;
+      case 'fridge':
+      case 'heater':
+        return _temperature;
+      default:
+        return _brightness;
+    }
+  }
+
+  String get _valueLabel {
+    switch (widget.deviceType) {
+      case 'light':
+        return 'Brightness';
+      case 'fan':
+        return 'Speed';
+      case 'ac':
+        return 'Fan Speed';
+      case 'fridge':
+        return 'Temperature';
+      case 'heater':
+        return 'Temperature';
+      default:
+        return 'Control';
+    }
+  }
+
+  double _getMinValue() {
+    switch (widget.deviceType) {
+      case 'light':
+        return 0.0;
+      case 'fan':
+      case 'ac':
+        return 0.0;
+      case 'fridge':
+      case 'heater':
+        return 16.0;
+      default:
+        return 0.0;
+    }
+  }
+
+  double _getMaxValue() {
+    switch (widget.deviceType) {
+      case 'light':
+        return 100.0;
+      case 'fan':
+      case 'ac':
+        return 100.0;
+      case 'fridge':
+      case 'heater':
+        return 30.0;
+      default:
+        return 100.0;
+    }
+  }
+
+  Function(double) _getSliderOnChanged() {
+    switch (widget.deviceType) {
+      case 'light':
+        return _updateBrightness;
+      case 'fan':
+      case 'ac':
+        return _updateSpeed;
+      case 'fridge':
+      case 'heater':
+        return _updateTemperature;
+      default:
+        return _updateBrightness;
+    }
+  }
+
+  String _getValueDisplay() {
+    switch (widget.deviceType) {
+      case 'light':
+        return '${_currentValue.round()}%';
+      case 'fan':
+      case 'ac':
+        return '${_currentValue.round()}%';
+      case 'fridge':
+      case 'heater':
+        return '${_currentValue.round()}°C';
+      default:
+        return '${_currentValue.round()}%';
+    }
+  }
+
+  bool _shouldShowModeControls() {
+    return widget.deviceType == 'ac' ||
+        widget.deviceType == 'washing machine' ||
+        widget.deviceType == 'microwave';
+  }
+
+  List<String> _getModeOptions() {
+    switch (widget.deviceType) {
+      case 'ac':
+        return ['Auto', 'Cool', 'Heat', 'Fan', 'Dry'];
+      case 'washing machine':
+        return ['Normal', 'Delicate', 'Heavy', 'Quick', 'Eco'];
+      case 'microwave':
+        return ['Defrost', 'Reheat', 'Cook', 'Grill', 'Auto'];
+      default:
+        return [];
+    }
+  }
+
+  Widget _buildModeControls() {
+    final modes = _getModeOptions();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mode',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: modes.map((mode) {
+              final isSelected = _mode.toLowerCase() == mode.toLowerCase();
+              return GestureDetector(
+                onTap: () => _updateMode(mode),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.black : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Text(
+                    mode,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _addAutomation(Automation automation) async {
     await _deviceRepository.addAutomation(automation);
@@ -317,7 +524,12 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
 
               const SizedBox(height: 30),
 
-              // Middle Section - Brightness Control and Light Bulb
+              // Device-specific mode controls (for AC, washing machine, etc.)
+              if (_shouldShowModeControls()) _buildModeControls(),
+
+              const SizedBox(height: 20),
+
+              // Middle Section - Main Control and Device Image
               SizedBox(
                 height: 400, // Fixed height instead of Expanded
                 child: Row(
@@ -373,11 +585,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
                                 ),
                                 child: Slider(
                                   value: _currentValue,
-                                  min: 0,
-                                  max: 100,
-                                  onChanged: widget.deviceType == 'light'
-                                      ? _updateBrightness
-                                      : _updateSpeed,
+                                  min: _getMinValue(),
+                                  max: _getMaxValue(),
+                                  onChanged: _getSliderOnChanged(),
                                 ),
                               ),
                             ),
@@ -493,9 +703,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen> {
 
                           const SizedBox(height: 20),
 
-                          // Brightness percentage
+                          // Value display with appropriate unit
                           Text(
-                            '${_currentValue.round()}%',
+                            _getValueDisplay(),
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,

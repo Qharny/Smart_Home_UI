@@ -37,7 +37,10 @@ class AppRouter {
           ),
         );
       case home:
-        return MaterialPageRoute(builder: (_) => const MainScreen());
+        final args = routeSettings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => MainScreen(initialIndex: args?['initialIndex'] ?? 0),
+        );
       case devices:
         return MaterialPageRoute(builder: (_) => const DevicesScreen());
       case lightControl:
