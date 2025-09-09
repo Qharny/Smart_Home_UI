@@ -37,10 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Force reinitialize devices to ensure correct names
-      await _deviceRepository.forceReinitializeDevices();
-
-      // Load devices from cache
+      // Load devices from cache (don't force reinitialize to preserve user-added devices)
       final devices = await _deviceRepository.getAllDevices();
 
       // Load user name from cache
@@ -118,11 +115,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRouter.notifications);
-            },
-            icon: const Icon(Icons.notifications_outlined, size: 24),
+          Padding(
+            padding: const EdgeInsets.only(right: 10.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRouter.notifications);
+                },
+                icon: const Icon(Icons.notifications_outlined, size: 24),
+              ),
+            ),
           ),
         ],
       ),
