@@ -170,7 +170,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     final nameLower = deviceName.toLowerCase();
 
     if (nameLower.contains('fridge') || nameLower.contains('refrigerator')) {
-      return 'asset/images/home.png'; // Using home.png as default for fridge
+      return 'asset/images/fridge.jpg'; // Using home.png as default for fridge
     } else if (nameLower.contains('fan') || nameLower.contains('air')) {
       return 'asset/images/fan.png';
     } else if (nameLower.contains('light') ||
@@ -220,7 +220,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     if (nameLower.contains('fan') ||
         nameLower.contains('air') ||
         nameLower.contains('ac')) {
-      return 'fan';
+      return 'ac';
     } else if (nameLower.contains('light') ||
         nameLower.contains('bulb') ||
         nameLower.contains('lamp') ||
@@ -236,28 +236,28 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       return 'tv';
     } else if (nameLower.contains('fridge') ||
         nameLower.contains('refrigerator')) {
-      return 'appliance';
+      return 'fridge';
     } else if (nameLower.contains('washing') ||
         nameLower.contains('washer') ||
         nameLower.contains('dishwasher')) {
-      return 'appliance';
+      return 'washing machine';
     } else if (nameLower.contains('microwave') ||
         nameLower.contains('oven') ||
         nameLower.contains('coffee') ||
         nameLower.contains('toaster')) {
-      return 'appliance';
+      return 'microwave';
     } else if (nameLower.contains('heater')) {
       return 'heater';
     } else if (nameLower.contains('speaker') || nameLower.contains('sound')) {
       return 'audio';
     } else if (nameLower.contains('router') || nameLower.contains('wifi')) {
-      return 'network';
+      return 'router';
     } else if (nameLower.contains('door') ||
         nameLower.contains('lock') ||
         nameLower.contains('garage')) {
-      return 'security';
+      return 'door lock';
     } else {
-      return 'device'; // Default type
+      return 'appliance'; // Default type
     }
   }
 
