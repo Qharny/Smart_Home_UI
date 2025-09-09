@@ -37,10 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Force reinitialize devices to ensure correct names
-      await _deviceRepository.forceReinitializeDevices();
-
-      // Load devices from cache
+      // Load devices from cache (don't force reinitialize to preserve user-added devices)
       final devices = await _deviceRepository.getAllDevices();
 
       // Load user name from cache

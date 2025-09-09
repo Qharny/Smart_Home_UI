@@ -40,7 +40,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
   Future<void> _loadData() async {
     try {
-      await _deviceRepository.forceReinitializeDevices();
+      // Don't force reinitialize - just load existing devices
       final devices = await _deviceRepository.getAllDevices();
 
       setState(() {

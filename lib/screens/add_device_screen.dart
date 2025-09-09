@@ -21,6 +21,25 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   final DeviceRepository _deviceRepository = DeviceRepository();
   bool _isSubmitting = false;
 
+  // Predefined zone options
+  final List<String> _predefinedZones = [
+    'Living Room',
+    'Kitchen',
+    'Bedroom',
+    'Bathroom',
+    'Dining Room',
+    'Office',
+    'Garage',
+    'Basement',
+    'Attic',
+    'Garden',
+    'Balcony',
+    'Hallway',
+    'Laundry Room',
+    'Guest Room',
+    'Other',
+  ];
+
   @override
   void dispose() {
     _uniqueIdController.dispose();
@@ -81,8 +100,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       final newDevice = Device(
         id: _uniqueIdController.text.trim(),
         name: _assignedNameController.text.trim(),
-        imagePath: _getDeviceImagePath(_protocolController.text.trim()),
-        type: _getDeviceType(_protocolController.text.trim()),
+        imagePath: _getDeviceImagePath(_assignedNameController.text.trim()),
+        type: _getDeviceType(_assignedNameController.text.trim()),
         isOn: false,
         lastUpdated: DateTime.now(),
         additionalProperties: {
@@ -146,36 +165,97 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     }
   }
 
-  String _getDeviceImagePath(String protocol) {
-    // Determine image path based on protocol or default to bulb
-    final protocolLower = protocol.toLowerCase();
-    if (protocolLower.contains('fan') || protocolLower.contains('air')) {
+  String _getDeviceImagePath(String deviceName) {
+    // Determine image path based on device name
+    final nameLower = deviceName.toLowerCase();
+
+    if (nameLower.contains('fridge') || nameLower.contains('refrigerator')) {
+      return 'asset/images/home.png'; // Using home.png as default for fridge
+    } else if (nameLower.contains('fan') || nameLower.contains('air')) {
       return 'asset/images/fan.png';
-    } else if (protocolLower.contains('light') ||
-        protocolLower.contains('bulb')) {
+    } else if (nameLower.contains('light') ||
+        nameLower.contains('bulb') ||
+        nameLower.contains('lamp')) {
       return 'asset/images/bulb.png';
+    } else if (nameLower.contains('tv') || nameLower.contains('television')) {
+      return 'asset/images/tv.jpg';
+    } else if (nameLower.contains('ac') ||
+        nameLower.contains('air conditioner')) {
+      return 'asset/images/ac.jpg';
+    } else if (nameLower.contains('washing') || nameLower.contains('washer')) {
+      return 'asset/images/washing_machine.jpg';
+    } else if (nameLower.contains('microwave') || nameLower.contains('oven')) {
+      return 'asset/images/microwave.jpg';
+    } else if (nameLower.contains('dishwasher')) {
+      return 'asset/images/dish_washer.jpg';
+    } else if (nameLower.contains('coffee') || nameLower.contains('maker')) {
+      return 'asset/images/coffee.jpg';
+    } else if (nameLower.contains('toaster')) {
+      return 'asset/images/toaster.jpg';
+    } else if (nameLower.contains('heater')) {
+      return 'asset/images/heater.jpg';
+    } else if (nameLower.contains('camera') || nameLower.contains('security')) {
+      return 'asset/images/camera.png';
+    } else if (nameLower.contains('speaker') || nameLower.contains('sound')) {
+      return 'asset/images/speaker.jpg';
+    } else if (nameLower.contains('router') || nameLower.contains('wifi')) {
+      return 'asset/images/router.jpg';
+    } else if (nameLower.contains('door') || nameLower.contains('lock')) {
+      return 'asset/images/door_lock.jpg';
+    } else if (nameLower.contains('garage')) {
+      return 'asset/images/garage_door.jpg';
+    } else if (nameLower.contains('sensor') || nameLower.contains('motion')) {
+      return 'asset/images/camera.png'; // Using camera for sensors
+    } else if (nameLower.contains('switch') || nameLower.contains('outlet')) {
+      return 'asset/images/bulb.png'; // Using bulb for switches
     } else {
       return 'asset/images/bulb.png'; // Default image
     }
   }
 
-  String _getDeviceType(String protocol) {
-    // Determine device type based on protocol
-    final protocolLower = protocol.toLowerCase();
-    if (protocolLower.contains('fan') ||
-        protocolLower.contains('air') ||
-        protocolLower.contains('ac')) {
+  String _getDeviceType(String deviceName) {
+    // Determine device type based on device name
+    final nameLower = deviceName.toLowerCase();
+
+    if (nameLower.contains('fan') ||
+        nameLower.contains('air') ||
+        nameLower.contains('ac')) {
       return 'fan';
-    } else if (protocolLower.contains('light') ||
-        protocolLower.contains('bulb') ||
-        protocolLower.contains('led')) {
+    } else if (nameLower.contains('light') ||
+        nameLower.contains('bulb') ||
+        nameLower.contains('lamp') ||
+        nameLower.contains('led')) {
       return 'light';
-    } else if (protocolLower.contains('switch') ||
-        protocolLower.contains('outlet')) {
+    } else if (nameLower.contains('switch') || nameLower.contains('outlet')) {
       return 'switch';
-    } else if (protocolLower.contains('sensor') ||
-        protocolLower.contains('motion')) {
+    } else if (nameLower.contains('sensor') ||
+        nameLower.contains('motion') ||
+        nameLower.contains('camera')) {
       return 'sensor';
+    } else if (nameLower.contains('tv') || nameLower.contains('television')) {
+      return 'tv';
+    } else if (nameLower.contains('fridge') ||
+        nameLower.contains('refrigerator')) {
+      return 'appliance';
+    } else if (nameLower.contains('washing') ||
+        nameLower.contains('washer') ||
+        nameLower.contains('dishwasher')) {
+      return 'appliance';
+    } else if (nameLower.contains('microwave') ||
+        nameLower.contains('oven') ||
+        nameLower.contains('coffee') ||
+        nameLower.contains('toaster')) {
+      return 'appliance';
+    } else if (nameLower.contains('heater')) {
+      return 'heater';
+    } else if (nameLower.contains('speaker') || nameLower.contains('sound')) {
+      return 'audio';
+    } else if (nameLower.contains('router') || nameLower.contains('wifi')) {
+      return 'network';
+    } else if (nameLower.contains('door') ||
+        nameLower.contains('lock') ||
+        nameLower.contains('garage')) {
+      return 'security';
     } else {
       return 'device'; // Default type
     }
@@ -407,11 +487,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   const SizedBox(height: 16),
 
                   // Zone field
-                  _buildInputField(
-                    controller: _zoneController,
-                    label: 'Zone',
-                    placeholder: 'Enter zone',
-                  ),
+                  _buildZoneDropdown(),
 
                   const SizedBox(height: 16),
 
@@ -514,6 +590,54 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                 vertical: 12,
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildZoneDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Zone',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _zoneController.text.isEmpty ? null : _zoneController.text,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+            hint: const Text(
+              'Select zone',
+              style: TextStyle(color: Colors.grey),
+            ),
+            items: _predefinedZones.map((String zone) {
+              return DropdownMenuItem<String>(value: zone, child: Text(zone));
+            }).toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _zoneController.text = newValue;
+                });
+              }
+            },
           ),
         ),
       ],
