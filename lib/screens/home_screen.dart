@@ -118,11 +118,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRouter.notifications);
-            },
-            icon: const Icon(Icons.notifications_outlined, size: 24),
+          Padding(
+            padding: const EdgeInsets.only(right: 10.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRouter.notifications);
+                },
+                icon: const Icon(Icons.notifications_outlined, size: 24),
+              ),
+            ),
           ),
         ],
       ),
