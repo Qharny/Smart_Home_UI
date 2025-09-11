@@ -17,14 +17,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
   final DeviceRepository _deviceRepository = DeviceRepository();
   final CacheService _cacheService = CacheService();
   List<Device> _devices = [];
-  String _selectedFilter = 'Living-room';
+  String _selectedFilter = 'All Devices';
   bool _isLoading = true;
-
-  final List<Map<String, dynamic>> _filters = [
-    {'name': 'Living-room', 'icon': Icons.chair},
-    {'name': 'Exterior', 'icon': Icons.outdoor_grill},
-    {'name': 'Living-room', 'icon': Icons.chair},
-  ];
+  List<Map<String, dynamic>> _filters = [];
 
   @override
   void initState() {
@@ -45,6 +40,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
       setState(() {
         _devices = devices;
+        _generateFilters();
         _isLoading = false;
       });
     } catch (e) {
@@ -54,10 +50,67 @@ class _DevicesScreenState extends State<DevicesScreen> {
     }
   }
 
+  void _generateFilters() {
+    // Start with "All Devices" filter
+    _filters = [
+      {'name': 'All Devices', 'icon': Icons.devices},
+    ];
+
+    // Get unique zones from devices
+    final Set<String> uniqueZones = {};
+    for (final device in _devices) {
+      final zone = device.additionalProperties?['zone'] as String?;
+      if (zone != null && zone.isNotEmpty) {
+        uniqueZones.add(zone);
+      }
+    }
+
+    // Add zone-specific filters with appropriate icons
+    for (final zone in uniqueZones) {
+      _filters.add({'name': zone, 'icon': _getZoneIcon(zone)});
+    }
+  }
+
+  IconData _getZoneIcon(String zone) {
+    final zoneLower = zone.toLowerCase();
+
+    if (zoneLower.contains('living')) {
+      return Icons.chair;
+    } else if (zoneLower.contains('kitchen')) {
+      return Icons.kitchen;
+    } else if (zoneLower.contains('bedroom')) {
+      return Icons.bed;
+    } else if (zoneLower.contains('bathroom')) {
+      return Icons.bathtub;
+    } else if (zoneLower.contains('dining')) {
+      return Icons.dining;
+    } else if (zoneLower.contains('office')) {
+      return Icons.work;
+    } else if (zoneLower.contains('garage')) {
+      return Icons.garage;
+    } else if (zoneLower.contains('basement')) {
+      return Icons.stairs;
+    } else if (zoneLower.contains('attic')) {
+      return Icons.attractions;
+    } else if (zoneLower.contains('garden')) {
+      return Icons.grass;
+    } else if (zoneLower.contains('balcony')) {
+      return Icons.balcony;
+    } else if (zoneLower.contains('hallway')) {
+      return Icons.door_front_door;
+    } else if (zoneLower.contains('laundry')) {
+      return Icons.local_laundry_service;
+    } else if (zoneLower.contains('guest')) {
+      return Icons.person;
+    } else {
+      return Icons.room; // Default icon for other zones
+    }
+  }
+
   Future<void> _toggleDevice(String deviceId) async {
     try {
       await _deviceRepository.toggleDevice(deviceId);
-      await _loadData();
+      await _loadData(); // This will refresh both devices and filters
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -79,6 +132,17 @@ class _DevicesScreenState extends State<DevicesScreen> {
     setState(() {
       _selectedFilter = filter;
     });
+  }
+
+  List<Device> _getFilteredDevices() {
+    if (_selectedFilter == 'All Devices') {
+      return _devices;
+    }
+
+    return _devices.where((device) {
+      final zone = device.additionalProperties?['zone'] as String?;
+      return zone == _selectedFilter;
+    }).toList();
   }
 
   @override
@@ -168,6 +232,40 @@ class _DevicesScreenState extends State<DevicesScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
+                  : _getFilteredDevices().isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.devices_other,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _selectedFilter == 'All Devices'
+                                ? 'No devices found'
+                                : 'No devices in $_selectedFilter',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _selectedFilter == 'All Devices'
+                                ? 'Add some devices to get started'
+                                : 'Try selecting a different category',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       gridDelegate:
@@ -177,9 +275,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
                             mainAxisSpacing: 16,
                             childAspectRatio: 0.85,
                           ),
-                      itemCount: _devices.length,
+                      itemCount: _getFilteredDevices().length,
                       itemBuilder: (context, index) {
-                        final device = _devices[index];
+                        final device = _getFilteredDevices()[index];
                         return DevicePageCard(
                           deviceId: device.id,
                           name: device.name,

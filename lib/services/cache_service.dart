@@ -78,7 +78,11 @@ class CacheService {
   }
 
   // Authentication Management
-  Future<void> saveLoginState(bool isLoggedIn, {String? userName, String? phoneNumber}) async {
+  Future<void> saveLoginState(
+    bool isLoggedIn, {
+    String? userName,
+    String? phoneNumber,
+  }) async {
     await _prefs.setBool(_isLoggedInKey, isLoggedIn);
     if (userName != null) {
       await saveUserName(userName);
@@ -97,9 +101,25 @@ class CacheService {
   }
 
   Future<void> logout() async {
+    print('CacheService: Starting logout process');
+
+    // Clear authentication data
     await _prefs.remove(_isLoggedInKey);
     await _prefs.remove(_userPhoneKey);
-    // Keep user name for convenience, but clear login state
+    await _prefs.remove(_userNameKey);
+
+    // Clear device states and data
+    await clearDeviceStates();
+    await _prefs.remove('devices_list');
+    await _prefs.remove('automations_list');
+
+    // Clear sync data
+    await _prefs.remove(_lastSyncTimeKey);
+
+    // Keep theme preference and first launch flag for better UX
+    // These don't contain sensitive user data
+
+    print('CacheService: Logout completed - all user data cleared');
   }
 
   // App Settings

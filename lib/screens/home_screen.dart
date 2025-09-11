@@ -523,24 +523,24 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        content: const Text(
+          'Are you sure you want to logout? This will clear all your data and device settings.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.black),
+            ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // Navigate to welcome screen
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRouter.welcome,
-                (route) => false,
-              );
+              await _performLogout();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.black,
               foregroundColor: Colors.white,
             ),
             child: const Text('Logout'),
@@ -548,5 +548,48 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _performLogout() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Clear all cache and user data
+      await _cacheService.logout();
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Navigate to welcome screen
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRouter.welcome,
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's still open
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
