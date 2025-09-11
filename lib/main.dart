@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smart_home/route/app_route.dart';
 import 'package:smart_home/services/automation_service.dart';
 import 'package:smart_home/services/cache_service.dart';
+import 'package:smart_home/services/notification_service.dart';
 import 'package:smart_home/services/theme_service.dart';
 
 void main() async {
@@ -22,10 +23,13 @@ class SmartHomeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeService(),
-      child: Consumer<ThemeService>(
-        builder: (context, themeService, child) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeService()),
+        ChangeNotifierProvider(create: (_) => NotificationService()),
+      ],
+      child: Consumer2<ThemeService, NotificationService>(
+        builder: (context, themeService, notificationService, child) {
           return MaterialApp(
             title: 'Smart Home',
             debugShowCheckedModeBanner: false,

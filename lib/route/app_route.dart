@@ -5,6 +5,7 @@ import '../screens/control_screen.dart';
 import '../screens/main_screen.dart';
 import '../screens/notification_screen.dart';
 import '../screens/otp.dart';
+import '../screens/settings_screen.dart';
 import '../screens/splash.dart';
 import '../screens/welcome_screen.dart';
 
@@ -58,6 +59,8 @@ class AppRouter {
         );
       case notifications:
         return MaterialPageRoute(builder: (_) => const NotificationScreen());
+      case settings:
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

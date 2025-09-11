@@ -405,12 +405,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
                 children: [
                   _buildDrawerItem(
-                    // icon: Icons.home,
+                    icon: Icons.settings,
                     title: 'Settings',
                     onTap: () {
                       Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.settings);
                     },
-                    isSelected: true,
+                    isSelected: false,
                   ),
                   Divider(),
                   Consumer<ThemeService>(
@@ -441,11 +442,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Divider(),
                   _buildDrawerItem(
-                    // icon: Icons.add_circle_outline,
+                    icon: Icons.logout,
                     title: 'Logout',
                     onTap: () {
                       _showLogoutDialog();
                     },
+                    textColor: Colors.red,
                   ),
                   Divider(),
                 ],
@@ -458,13 +460,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawerItem({
-    // required IconData icon,
+    IconData? icon,
     required String title,
     required VoidCallback onTap,
     bool isSelected = false,
     Color? textColor,
   }) {
     return ListTile(
+      leading: icon != null
+          ? Icon(
+              icon,
+              color:
+                  textColor ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black),
+            )
+          : null,
       title: Text(
         title,
         style: TextStyle(
@@ -529,10 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.black),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
           ),
           ElevatedButton(
             onPressed: () async {
