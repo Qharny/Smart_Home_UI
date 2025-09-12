@@ -118,6 +118,33 @@ class _DevicesScreenState extends State<DevicesScreen> {
     }
   }
 
+  Future<void> _removeDevice(String deviceId) async {
+    try {
+      print('DevicesScreen: Removing device: $deviceId'); // Debug log
+      await _deviceRepository.removeDevice(deviceId);
+      print('DevicesScreen: Device removed successfully'); // Debug log
+      await _loadData(); // Reload data to reflect changes
+      print('DevicesScreen: Data reloaded after removal'); // Debug log
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Device removed successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('DevicesScreen: Error removing device: $e'); // Debug log
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to remove device: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _refreshDeviceStates() async {
     for (final device in _devices) {
       final cachedState = await _cacheService.getDevicePowerState(device.id);
@@ -308,6 +335,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
                                 'imagePath': device.imagePath,
                               },
                             );
+                          },
+                          onRemove: () async {
+                            await _removeDevice(device.id);
                           },
                         );
                       },

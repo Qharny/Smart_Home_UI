@@ -9,6 +9,7 @@ class HomeDeviceCard extends StatefulWidget {
   final bool isOn;
   final Function(bool) onToggle;
   final VoidCallback? onViewControls;
+  final VoidCallback? onRemove;
 
   const HomeDeviceCard({
     super.key,
@@ -18,6 +19,7 @@ class HomeDeviceCard extends StatefulWidget {
     required this.isOn,
     required this.onToggle,
     this.onViewControls,
+    this.onRemove,
   });
 
   @override
@@ -82,131 +84,187 @@ class _HomeDeviceCardState extends State<HomeDeviceCard> {
     );
   }
 
+  void _showRemoveDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Remove Device'),
+          content: Text(
+            'Are you sure you want to remove "${widget.name}" from your smart home?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black,
+                backgroundColor: Colors.white,
+              ),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onRemove?.call();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.black,
+              ),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Image positioned to touch the right edge
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 30,
-            child: Container(
-              width: 80,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-              ),
-              child: ClipRRect(
-                child: Image.asset(widget.imagePath, fit: BoxFit.cover),
-              ),
+    return GestureDetector(
+      onLongPress: _showRemoveDialog,
+      child: Container(
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title at the top left
-                Text(
-                  widget.name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Image positioned to touch the right edge
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 30,
+              child: Container(
+                width: 80,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
                   ),
                 ),
-                const SizedBox(height: 16),
+                child: ClipRRect(
+                  child: Image.asset(widget.imagePath, fit: BoxFit.cover),
+                ),
+              ),
+            ),
 
-                // Custom toggle button
-                GestureDetector(
-                  onTap: _handleToggle,
-                  child: Container(
-                    width: 30,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _localIsOn ? Colors.black : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.3),
-                        width: 1,
-                      ),
+            // Remove button (X) at top right corner
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: _showRemoveDialog,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title at the top left
+                  Text(
+                    widget.name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    child: Stack(
-                      children: [
-                        // Toggle circle
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 200),
-                          left: 2,
-                          top: _localIsOn ? 2 : 22,
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Custom toggle button
+                  GestureDetector(
+                    onTap: _handleToggle,
+                    child: Container(
+                      width: 30,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: _localIsOn ? Colors.black : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.blue.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Toggle circle
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 200),
+                            left: 2,
+                            top: _localIsOn ? 2 : 22,
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // View controls button at the bottom
+                  SizedBox(
+                    height: 30,
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: widget.onViewControls,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          side: const BorderSide(color: Colors.black, width: 1),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // View controls button at the bottom
-                SizedBox(
-                  height: 30,
-                  width: 100,
-                  child: ElevatedButton(
-                    onPressed: widget.onViewControls,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.black,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        side: const BorderSide(color: Colors.black, width: 1),
-                        borderRadius: BorderRadius.circular(20),
+                        padding: const EdgeInsets.symmetric(vertical: 5),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                    ),
-                    child: const Text(
-                      'View controls',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      child: const Text(
+                        'View controls',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

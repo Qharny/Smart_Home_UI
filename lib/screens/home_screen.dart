@@ -71,6 +71,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _removeDevice(String deviceId) async {
+    try {
+      print('HomeScreen: Removing device: $deviceId'); // Debug log
+      await _deviceRepository.removeDevice(deviceId);
+      print('HomeScreen: Device removed successfully'); // Debug log
+      await _loadData(); // Reload data to reflect changes
+      print('HomeScreen: Data reloaded after removal'); // Debug log
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Device removed successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('HomeScreen: Error removing device: $e'); // Debug log
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to remove device: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _refreshDeviceStates() async {
     print('HomeScreen: Refreshing device states');
     // Refresh device states from cache
@@ -329,6 +356,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             // Refresh device states when returning from control screen
                             await _refreshDeviceStates();
+                          },
+                          onRemove: () async {
+                            await _removeDevice(device.id);
                           },
                         );
                       },
