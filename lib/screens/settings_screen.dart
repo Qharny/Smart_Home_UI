@@ -107,34 +107,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _showClearCacheDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Cache'),
-        content: const Text(
-          'This will clear all cached device data. Your login information will be preserved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _clearCache();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Clear Cache'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showClearCacheDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Clear Cache'),
+  //       content: const Text(
+  //         'This will clear all cached device data. Your login information will be preserved.',
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () async {
+  //             Navigator.pop(context);
+  //             await _clearCache();
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.black,
+  //             foregroundColor: Colors.white,
+  //           ),
+  //           child: const Text('Clear Cache'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Future<void> _clearCache() async {
     try {
@@ -309,13 +309,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSection(
               title: 'Device Management',
               children: [
-                _buildSettingsTile(
-                  icon: Icons.clear_all,
-                  title: 'Clear Cache',
-                  subtitle: 'Clear cached device data',
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _showClearCacheDialog,
-                ),
+                // _buildSettingsTile(
+                //   icon: Icons.clear_all,
+                //   title: 'Clear Cache',
+                //   subtitle: 'Clear cached device data',
+                //   trailing: const Icon(Icons.chevron_right),
+                //   onTap: _showClearCacheDialog,
+                // ),
                 _buildSettingsTile(
                   icon: Icons.refresh,
                   title: 'Refresh Devices',

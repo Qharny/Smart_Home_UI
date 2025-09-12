@@ -167,7 +167,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard> {
                   width: 24,
                   height: 24,
                   decoration: const BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.black,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.close, color: Colors.white, size: 16),
